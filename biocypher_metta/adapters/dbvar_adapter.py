@@ -1,6 +1,6 @@
 import gzip
 from biocypher_metta.adapters import Adapter
-from biocypher_metta.adapters.helpers import check_genomic_location
+from biocypher_metta.adapters.helpers import build_regulatory_region_id, check_genomic_location
 # Example dbVar input file:
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 # 1	10000	nssv16889290	N	<DUP>	.	.	DBVARID=nssv16889290;SVTYPE=DUP;END=52000;SVLEN=42001;EXPERIMENT=1;SAMPLESET=1;REGIONID=nsv6138160;AC=1453;AF=0.241208;AN=6026
@@ -46,11 +46,12 @@ class DBVarVariantAdapter(Adapter):
                     if info[i].startswith('END='):
                         end = int(info[i].split('=')[1])
                         break
-                
+                region_id = build_regulatory_region_id(chr, start, end)
                 if check_genomic_location(self.chr, self.start, self.end, chr, start, end):
                     props = {}
 
                     if self.write_properties:
+                        props['id'] = variant_id
                         props['chr'] = chr
                         props['start'] = start
                         props['end'] = end
@@ -61,4 +62,4 @@ class DBVarVariantAdapter(Adapter):
                             props['source_url'] = self.source_url
 
 
-                    yield variant_id, self.label, props
+                    yield region_id, self.label, props
