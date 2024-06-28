@@ -1,242 +1,242 @@
-gencode_gene:
-  adapter:
-    module: biocypher_metta.adapters.gencode_gene_adapter
-    cls: GencodeGeneAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-      gene_alias_file_path: ./aux_files/Homo_sapiens.gene_info.gz
+# gencode_gene:
+#   adapter:
+#     module: biocypher_metta.adapters.gencode_gene_adapter
+#     cls: GencodeGeneAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+#       gene_alias_file_path: ./aux_files/Homo_sapiens.gene_info.gz
 
-  outdir: gencode/gene
-  nodes: True
-  edges: False
-
-
-gencode_transcripts:
-  adapter:
-    module: biocypher_metta.adapters.gencode_adapter
-    cls: GencodeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-      type: transcript
-      label: transcript
-
-  outdir: gencode/transcript
-  nodes: True
-  edges: False
+#   outdir: gencode/gene
+#   nodes: True
+#   edges: False
 
 
-transcribed_to:
-  adapter:
-    module: biocypher_metta.adapters.gencode_adapter
-    cls: GencodeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-      type: transcribed to
-      label: transcribed_to
+# gencode_transcripts:
+#   adapter:
+#     module: biocypher_metta.adapters.gencode_adapter
+#     cls: GencodeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+#       type: transcript
+#       label: transcript
 
-  outdir: gencode
-  nodes: False
-  edges: True
-
-transcribed_from:
-  adapter:
-    module: biocypher_metta.adapters.gencode_adapter
-    cls: GencodeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-      type: transcribed from
-      label: transcribed_from
-
-  outdir: gencode
-  nodes: False
-  edges: True
+#   outdir: gencode/transcript
+#   nodes: True
+#   edges: False
 
 
-uniprotkb_sprot:
-  adapter:
-    module: biocypher_metta.adapters.uniprot_protein_adapter
-    cls: UniprotProteinAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+# transcribed_to:
+#   adapter:
+#     module: biocypher_metta.adapters.gencode_adapter
+#     cls: GencodeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+#       type: transcribed to
+#       label: transcribed_to
 
-  outdir: uniprot
-  nodes: True
-  edges: False
+#   outdir: gencode
+#   nodes: False
+#   edges: True
 
-uniprotkb_sprot_translates_to:
-  adapter:
-    module: biocypher_metta.adapters.uniprot_adapter
-    cls: UniprotAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
-      type: translates to
-      label: translates_to
+# transcribed_from:
+#   adapter:
+#     module: biocypher_metta.adapters.gencode_adapter
+#     cls: GencodeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+#       type: transcribed from
+#       label: transcribed_from
 
-  outdir: uniprot
-  nodes: False
-  edges: True
-
-uniprotkb_sprot_translates_of:
-  adapter:
-    module: biocypher_metta.adapters.uniprot_adapter
-    cls: UniprotAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
-      type: translation of
-      label: translation_of
-
-  outdir: uniprot
-  nodes: False
-  edges: True
-
-pathway:
-  adapter:
-    module: biocypher_metta.adapters.reactome_pathway_adapter
-    cls: ReactomePathwayAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
-      pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
-
-  outdir: reactome
-  nodes: True
-  edges: False
-
-genes_pathways:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
-      label: genes_pathways
-
-  outdir: reactome
-  nodes: False
-  edges: True
-
-parent_pathway_of:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-      label: parent_pathway_of
-
-  outdir: reactome
-  nodes: False
-  edges: True
-
-child_pathway_of:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-      label: child_pathway_of
-
-  outdir: reactome
-  nodes: False
-  edges: True
-
-go_ontology_terms:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      type: node
-      dry_run: False
-
-  outdir: gene_onotology
-  nodes: True
-  edges: False
-
-go_subtype_of:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      label: go_subtype_of
-      type: edge
-      dry_run: False
-
-  outdir: gene_onotology
-  nodes: False
-  edges: True
+#   outdir: gencode
+#   nodes: False
+#   edges: True
 
 
-gaf:
-  adapter:
-    module: biocypher_metta.adapters.gaf_adapter
-    cls: GAFAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/go/goa_human.gaf.gz
+# uniprotkb_sprot:
+#   adapter:
+#     module: biocypher_metta.adapters.uniprot_protein_adapter
+#     cls: UniprotProteinAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+
+#   outdir: uniprot
+#   nodes: True
+#   edges: False
+
+# uniprotkb_sprot_translates_to:
+#   adapter:
+#     module: biocypher_metta.adapters.uniprot_adapter
+#     cls: UniprotAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+#       type: translates to
+#       label: translates_to
+
+#   outdir: uniprot
+#   nodes: False
+#   edges: True
+
+# uniprotkb_sprot_translates_of:
+#   adapter:
+#     module: biocypher_metta.adapters.uniprot_adapter
+#     cls: UniprotAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+#       type: translation of
+#       label: translation_of
+
+#   outdir: uniprot
+#   nodes: False
+#   edges: True
+
+# pathway:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_pathway_adapter
+#     cls: ReactomePathwayAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
+#       pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
+
+#   outdir: reactome
+#   nodes: True
+#   edges: False
+
+# genes_pathways:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
+#       label: genes_pathways
+
+#   outdir: reactome
+#   nodes: False
+#   edges: True
+
+# parent_pathway_of:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+#       label: parent_pathway_of
+
+#   outdir: reactome
+#   nodes: False
+#   edges: True
+
+# child_pathway_of:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+#       label: child_pathway_of
+
+#   outdir: reactome
+#   nodes: False
+#   edges: True
+
+# go_ontology_terms:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       type: node
+#       dry_run: False
+
+#   outdir: gene_onotology
+#   nodes: True
+#   edges: False
+
+# go_subtype_of:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       label: go_subtype_of
+#       type: edge
+#       dry_run: False
+
+#   outdir: gene_onotology
+#   nodes: False
+#   edges: True
 
 
-  outdir: gaf
-  nodes: False
-  edges: True
+# gaf:
+#   adapter:
+#     module: biocypher_metta.adapters.gaf_adapter
+#     cls: GAFAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/go/goa_human.gaf.gz
 
 
-# coexpression:
-#  adapter:
-#    module: biocypher_metta.adapters.coxpresdb_adapter
-#    cls: CoxpresdbAdapter
-#    args:
-#      filepath: /mnt/hdd_2/abdu/biocypher_data/coxpressdb
-#      ensemble_to_entrez_path: ./aux_files/entrez_to_ensembl.pkl
-
-#  outdir: coxpressdb
-#  nodes: False
-#  edges: True
-
-tflink:
-    adapter:
-        module: biocypher_metta.adapters.tflink_adapter
-        cls: TFLinkAdapter
-        args:
-          filepath: /mnt/hdd_2/abdu/biocypher_data/tflink/tflink_homo_sapiens_interactions.tsv.gz
-          entrez_to_ensemble_map: ./aux_files/entrez_to_ensembl.pkl
-
-    outdir: tflink
-    nodes: False
-    edges: True
-
-string:
-  adapter:
-    module: biocypher_metta.adapters.string_ppi_adapter
-    cls: StringPPIAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/string/string_human_ppi_v12.0.txt.gz
-      ensembl_to_uniprot_map: ./aux_files/string_ensembl_uniprot_map.pkl
-
-  outdir: string
-  nodes: False
-  edges: True
-
-tadmap:
-  adapter:
-    module: biocypher_metta.adapters.tadmap_adapter
-    cls: TADMapAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/tadmap/TADMap_geneset_hs.csv
-
-  outdir: tadmap
-  nodes: True
-  edges: False
+#   outdir: gaf
+#   nodes: False
+#   edges: True
 
 
-gtex_eqtl:
-  adapter:
-    module: biocypher_metta.adapters.gtex_eqtl_adapter
-    cls: GTExEQTLAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/GTEx_Analysis_v8_eQTL
-      gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
+# # coexpression:
+# #  adapter:
+# #    module: biocypher_metta.adapters.coxpresdb_adapter
+# #    cls: CoxpresdbAdapter
+# #    args:
+# #      filepath: /mnt/hdd_2/abdu/biocypher_data/coxpressdb
+# #      ensemble_to_entrez_path: ./aux_files/entrez_to_ensembl.pkl
 
-  outdir: gtex/eqtl
-  nodes: False
-  edges: True
+# #  outdir: coxpressdb
+# #  nodes: False
+# #  edges: True
+
+# tflink:
+#     adapter:
+#         module: biocypher_metta.adapters.tflink_adapter
+#         cls: TFLinkAdapter
+#         args:
+#           filepath: /mnt/hdd_2/abdu/biocypher_data/tflink/tflink_homo_sapiens_interactions.tsv.gz
+#           entrez_to_ensemble_map: ./aux_files/entrez_to_ensembl.pkl
+
+#     outdir: tflink
+#     nodes: False
+#     edges: True
+
+# string:
+#   adapter:
+#     module: biocypher_metta.adapters.string_ppi_adapter
+#     cls: StringPPIAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/string/string_human_ppi_v12.0.txt.gz
+#       ensembl_to_uniprot_map: ./aux_files/string_ensembl_uniprot_map.pkl
+
+#   outdir: string
+#   nodes: False
+#   edges: True
+
+# tadmap:
+#   adapter:
+#     module: biocypher_metta.adapters.tadmap_adapter
+#     cls: TADMapAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/tadmap/TADMap_geneset_hs.csv
+
+#   outdir: tadmap
+#   nodes: True
+#   edges: False
+
+
+# gtex_eqtl:
+#   adapter:
+#     module: biocypher_metta.adapters.gtex_eqtl_adapter
+#     cls: GTExEQTLAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/GTEx_Analysis_v8_eQTL
+#       gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
+
+#   outdir: gtex/eqtl
+#   nodes: False
+#   edges: True
 
 # hocomoco:
 #   adapter:

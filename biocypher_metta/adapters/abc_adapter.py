@@ -58,7 +58,7 @@ class ABCAdapter(Adapter):
                         }
                         yield rsid, self.label, _props
                 except KeyError as e:
-                    logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
+                    # logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
                     continue
 
 
@@ -83,8 +83,8 @@ class ABCAdapter(Adapter):
 
                             yield _source, _target, self.label, props
                         except Exception as e:
-                            print(f"error while parsing row: {row}, error: {e} skipping...")
+                            # print(f"error while parsing row: {row}, error: {e} skipping...")
                             continue
                 except KeyError as e:
-                    logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
+                    # logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
                     continue
