@@ -1,7 +1,7 @@
 """
 Knowledge graph generation through BioCypher script
 """
-from biocypher_metta.prolog_writer import *
+from biocypher_metta.metta_writer import *
 from biocypher._logger import logger
 import typer
 import yaml
@@ -31,7 +31,7 @@ def main(output_dir: Annotated[pathlib.Path, typer.Option(exists=True, file_okay
     dbsnp_pos_dict = pickle.load(open(dbsnp_pos, 'rb'))
 
 
-    bc = PrologWriter(schema_config="config/schema_config.yaml",
+    bc = MeTTaWriter(schema_config="config/schema_config.yaml",
                      biocypher_config="config/biocypher_config.yaml",
                      output_dir=output_dir)
 
