@@ -214,16 +214,16 @@
 #   nodes: False
 #   edges: True
 
-# tadmap:
-#   adapter:
-#     module: biocypher_metta.adapters.tadmap_adapter
-#     cls: TADMapAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/tadmap/TADMap_geneset_hs.csv
+tadmap:
+  adapter:
+    module: biocypher_metta.adapters.tadmap_adapter
+    cls: TADMapAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/tadmap/TADMap_geneset_hs.csv
 
-#   outdir: tadmap
-#   nodes: True
-#   edges: False
+  outdir: tadmap
+  nodes: True
+  edges: False
 
 
 # gtex_eqtl:
