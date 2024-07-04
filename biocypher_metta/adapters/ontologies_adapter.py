@@ -76,7 +76,7 @@ class OntologyAdapter(Adapter):
             props = {}
             if self.write_properties:
                 props['term_name'] = term_name
-                props['description'] = description
+                # props['description'] = description
                 props['synonyms'] = synonyms
 
                 if self.add_provenance:

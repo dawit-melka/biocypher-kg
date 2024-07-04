@@ -131,11 +131,11 @@ class PrologWriter:
         omit_chars = ["(", ")", "+", "."]
         if isinstance(prop, str):
             for c in replace_chars:
-                prop = prop.replace(c, "_")
+                prop = prop.replace(c, "_").lower()
             for c in omit_chars:
-                prop = prop.replace(c, "")
+                prop = prop.replace(c, "").lower()
             
-        return prop.lower()
+        return prop
 
     def get_parent(self, G, node):
         """

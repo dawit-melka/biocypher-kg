@@ -107,4 +107,4 @@ class TADMapAdapter(Adapter):
                         if self.write_properties and self.add_provenance:
                             _props['source'] = self.source
                             _props['source_url'] = self.source_url
-                        yield _id, self.label, self.label, _props
+                        yield gene, _id, self.label, _props
