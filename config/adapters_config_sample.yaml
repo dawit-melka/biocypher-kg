@@ -52,42 +52,42 @@
 #   edges: True
 
 
-# uniprotkb_sprot:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_protein_adapter
-#     cls: UniprotProteinAdapter
-#     args:
-#       filepath: ./samples/uniprot_sprot_human_sample.dat.gz
+uniprotkb_sprot:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_protein_adapter
+    cls: UniprotProteinAdapter
+    args:
+      filepath: ./samples/uniprot_sprot_human_sample.dat.gz
 
-#   outdir: uniprot
-#   nodes: True
-#   edges: False
+  outdir: uniprot
+  nodes: True
+  edges: False
 
-# uniprotkb_sprot_translates_to:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_adapter
-#     cls: UniprotAdapter
-#     args:
-#       filepath: ./samples/uniprot_sprot_human_sample.dat.gz
-#       type: translates to
-#       label: translates_to
+uniprotkb_sprot_translates_to:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_adapter
+    cls: UniprotAdapter
+    args:
+      filepath: ./samples/uniprot_sprot_human_sample.dat.gz
+      type: translates to
+      label: translates_to
 
-#   outdir: uniprot
-#   nodes: False
-#   edges: True
+  outdir: uniprot
+  nodes: False
+  edges: True
 
-# uniprotkb_sprot_translates_of:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_adapter
-#     cls: UniprotAdapter
-#     args:
-#       filepath: ./samples/uniprot_sprot_human_sample.dat.gz
-#       type: translation of
-#       label: translation_of
+uniprotkb_sprot_translates_of:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_adapter
+    cls: UniprotAdapter
+    args:
+      filepath: ./samples/uniprot_sprot_human_sample.dat.gz
+      type: translation of
+      label: translation_of
 
-#   outdir: uniprot
-#   nodes: False
-#   edges: True
+  outdir: uniprot
+  nodes: False
+  edges: True
 
 # pathway:
 #   adapter:
@@ -201,17 +201,17 @@
 #     nodes: False
 #     edges: True
 
-# string:
-#   adapter:
-#     module: biocypher_metta.adapters.string_ppi_adapter
-#     cls: StringPPIAdapter
-#     args:
-#       filepath: ./samples/string_human_ppi_v12.0.txt.gz
-#       ensembl_to_uniprot_map: ./aux_files/string_ensembl_uniprot_map.pkl
+string:
+  adapter:
+    module: biocypher_metta.adapters.string_ppi_adapter
+    cls: StringPPIAdapter
+    args:
+      filepath: ./samples/string_human_ppi_v12.0.txt.gz
+      ensembl_to_uniprot_map: ./aux_files/string_ensembl_uniprot_map.pkl
 
-#   outdir: string
-#   nodes: False
-#   edges: True
+  outdir: string
+  nodes: False
+  edges: True
 
 # tadmap:
 #   adapter:
@@ -224,17 +224,17 @@
 #   nodes: True
 #   edges: False
 
-tadmap_gene:
-  adapter:
-    module: biocypher_metta.adapters.tadmap_adapter
-    cls: TADMapAdapter
-    args:
-      filepath: ./samples/tad_sample.csv
-      label: in_tad_region
+# tadmap_gene:
+#   adapter:
+#     module: biocypher_metta.adapters.tadmap_adapter
+#     cls: TADMapAdapter
+#     args:
+#       filepath: ./samples/tad_sample.csv
+#       label: in_tad_region
 
-  outdir: tadmap
-  nodes: False
-  edges: True
+#   outdir: tadmap
+#   nodes: False
+#   edges: True
 
 
 # gtex_eqtl:
