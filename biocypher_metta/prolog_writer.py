@@ -140,6 +140,8 @@ class PrologWriter:
                 # Check if the first character is a digit
                 if prop[0].isdigit():
                     return f"'{prop}'"
+        
+        return prop
                         
 
     def get_parent(self, G, node):
