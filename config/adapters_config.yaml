@@ -25,31 +25,31 @@
 #   edges: False
 
 
-# transcribed_to:
-#   adapter:
-#     module: biocypher_metta.adapters.gencode_adapter
-#     cls: GencodeAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-#       type: transcribed to
-#       label: transcribed_to
+transcribed_to:
+  adapter:
+    module: biocypher_metta.adapters.gencode_adapter
+    cls: GencodeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+      type: transcribed to
+      label: transcribed_to
 
-#   outdir: gencode/transcript
-#   nodes: False
-#   edges: True
+  outdir: gencode/transcript
+  nodes: False
+  edges: True
 
-# transcribed_from:
-#   adapter:
-#     module: biocypher_metta.adapters.gencode_adapter
-#     cls: GencodeAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-#       type: transcribed from
-#       label: transcribed_from
+transcribed_from:
+  adapter:
+    module: biocypher_metta.adapters.gencode_adapter
+    cls: GencodeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+      type: transcribed from
+      label: transcribed_from
 
-#   outdir: gencode/transcript
-#   nodes: False
-#   edges: True
+  outdir: gencode/transcript
+  nodes: False
+  edges: True
 
 
 # uniprotkb_sprot:
