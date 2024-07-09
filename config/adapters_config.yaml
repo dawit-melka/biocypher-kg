@@ -238,17 +238,17 @@
 #   nodes: False
 #   edges: True
 
-gtex_eqtl:
-  adapter:
-    module: biocypher_metta.adapters.gtex_eqtl_adapter
-    cls: GTExEQTLAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
-      gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
+# gtex_eqtl:
+#   adapter:
+#     module: biocypher_metta.adapters.gtex_eqtl_adapter
+#     cls: GTExEQTLAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
+#       gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
 
-  outdir: gtex/eqtl
-  nodes: False
-  edges: True
+#   outdir: gtex/eqtl
+#   nodes: False
+#   edges: True
 
 # hocomoco:
 #   adapter:
@@ -323,18 +323,18 @@ roadmap_dhs:
 #   nodes: False
 #   edges: True
 
-# cadd:
-#   adapter:
-#     module: biocypher_metta.adapters.cadd_adapter
-#     cls: CADDAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/cadd.forgedb.csv.gz
-#       dbsnp_rsid_map: None # will be provided by import script
-#       chr: chr16
+cadd:
+  adapter:
+    module: biocypher_metta.adapters.cadd_adapter
+    cls: CADDAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/cadd.forgedb.csv.gz
+      dbsnp_rsid_map: None # will be provided by import script
+      chr: chr16
 
-#   outdir: cadd
-#   nodes: True
-#   edges: False
+  outdir: cadd
+  nodes: True
+  edges: False
 
 # refseq_closest_gene:
 #   adapter:
@@ -561,16 +561,16 @@ roadmap_dhs:
 #   nodes: False
 #   edges: True
 
-dbsnp_snps:
-  adapter:
-    module: biocypher_metta.adapters.dbsnp_adapter
-    cls: DBSNPAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/dbsnp/00-common_all.vcf.gz
+# dbsnp_snps:
+#   adapter:
+#     module: biocypher_metta.adapters.dbsnp_adapter
+#     cls: DBSNPAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/dbsnp/00-common_all.vcf.gz
     
-  outdir: dbsnp
-  nodes: True
-  edges: False
+#   outdir: dbsnp
+#   nodes: True
+#   edges: False
 
 # enhancer_atlas_enhancer:
 #   adapter:
@@ -691,18 +691,18 @@ dbsnp_snps:
 #   nodes: False
 #   edges: True
 
-cl_part_of:
-  adapter:
-    module: biocypher_metta.adapters.cell_ontology_adapter
-    cls: CellOntologyAdapter
-    args:
-      ontology: 'cl'
-      label: cl_capable_of
-      type: edge
-      dry_run: False
-  outdir: cell_ontology
-  nodes: False
-  edges: True
+# cl_part_of:
+#   adapter:
+#     module: biocypher_metta.adapters.cell_ontology_adapter
+#     cls: CellOntologyAdapter
+#     args:
+#       ontology: 'cl'
+#       label: cl_capable_of
+#       type: edge
+#       dry_run: False
+#   outdir: cell_ontology
+#   nodes: False
+#   edges: True
 
 
 fabian_tf_snp:
