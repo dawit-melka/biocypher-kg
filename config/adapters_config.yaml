@@ -137,29 +137,29 @@
 #   nodes: False
 #   edges: True
 
-go_ontology_terms:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      type: node
-      dry_run: False
-      add_description: False
+# go_ontology_terms:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       type: node
+#       dry_run: False
+#       add_description: False
 
   outdir: gene_ontology
   nodes: True
   edges: False
 
-go_subclass_of:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      label: go_subclass_of
-      type: edge
-      dry_run: False
+# go_subclass_of:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       label: go_subclass_of
+#       type: edge
+#       dry_run: False
 
   outdir: gene_ontology
   nodes: False
