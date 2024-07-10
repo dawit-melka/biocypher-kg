@@ -238,17 +238,17 @@
 #   nodes: False
 #   edges: True
 
-# gtex_eqtl:
-#   adapter:
-#     module: biocypher_metta.adapters.gtex_eqtl_adapter
-#     cls: GTExEQTLAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
-#       gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
+gtex_eqtl:
+  adapter:
+    module: biocypher_metta.adapters.gtex_eqtl_adapter
+    cls: GTExEQTLAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
+      gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
 
-#   outdir: gtex/eqtl
-#   nodes: False
-#   edges: True
+  outdir: gtex/eqtl
+  nodes: False
+  edges: True
 
 # hocomoco:
 #   adapter:
@@ -323,18 +323,18 @@ roadmap_dhs:
 #   nodes: False
 #   edges: True
 
-cadd:
-  adapter:
-    module: biocypher_metta.adapters.cadd_adapter
-    cls: CADDAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/cadd.forgedb.csv.gz
-      dbsnp_rsid_map: None # will be provided by import script
-      chr: chr16
+# cadd:
+#   adapter:
+#     module: biocypher_metta.adapters.cadd_adapter
+#     cls: CADDAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/cadd.forgedb.csv.gz
+#       dbsnp_rsid_map: None # will be provided by import script
+#       chr: chr16
 
-  outdir: cadd
-  nodes: True
-  edges: False
+#   outdir: cadd
+#   nodes: True
+#   edges: False
 
 # refseq_closest_gene:
 #   adapter:
