@@ -52,42 +52,42 @@
 #   edges: True
 
 
-# uniprotkb_sprot:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_protein_adapter
-#     cls: UniprotProteinAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+uniprotkb_sprot:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_protein_adapter
+    cls: UniprotProteinAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
 
-#   outdir: uniprot
-#   nodes: True
-#   edges: False
+  outdir: uniprot
+  nodes: True
+  edges: False
 
-# uniprotkb_sprot_translates_to:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_adapter
-#     cls: UniprotAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
-#       type: translates to
-#       label: translates_to
+uniprotkb_sprot_translates_to:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_adapter
+    cls: UniprotAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+      type: translates to
+      label: translates_to
 
-#   outdir: uniprot
-#   nodes: False
-#   edges: True
+  outdir: uniprot
+  nodes: False
+  edges: True
 
-# uniprotkb_sprot_translates_of:
-#   adapter:
-#     module: biocypher_metta.adapters.uniprot_adapter
-#     cls: UniprotAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
-#       type: translation of
-#       label: translation_of
+uniprotkb_sprot_translates_of:
+  adapter:
+    module: biocypher_metta.adapters.uniprot_adapter
+    cls: UniprotAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
+      type: translation of
+      label: translation_of
 
-#   outdir: uniprot
-#   nodes: False
-#   edges: True
+  outdir: uniprot
+  nodes: False
+  edges: True
 
 # pathway:
 #   adapter:
