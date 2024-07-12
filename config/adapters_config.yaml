@@ -238,17 +238,17 @@ go_subclass_of:
 #   nodes: False
 #   edges: True
 
-# gtex_eqtl:
-#   adapter:
-#     module: biocypher_metta.adapters.gtex_eqtl_adapter
-#     cls: GTExEQTLAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
-#       gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
+gtex_eqtl:
+  adapter:
+    module: biocypher_metta.adapters.gtex_eqtl_adapter
+    cls: GTExEQTLAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gtex/eqtl/gtex.forgedb.csv.gz
+      gtex_tissue_ontology_map: ./aux_files/gtex_tissues_to_ontology_map.pkl
 
-#   outdir: gtex/eqtl
-#   nodes: False
-#   edges: True
+  outdir: gtex/eqtl
+  nodes: False
+  edges: True
 
 # hocomoco:
 #   adapter:
