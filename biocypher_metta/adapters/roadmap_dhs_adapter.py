@@ -53,7 +53,7 @@ class RoadMapDHSAdapter(Adapter):
                     if check_genomic_location(self.chr, self.start, self.end, chr, pos, pos):
                         _props = {}
                         if biological_context == None:
-                            # print(f"{tissue} not found in ontology map skipping...")
+                            print(f"{tissue} not found in ontology map skipping...")
                             continue
                         
                         _source = _id
