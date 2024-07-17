@@ -42,7 +42,7 @@ class DBSNPAdapter(Adapter):
                     continue
                 data = line.strip().split('\t')
                 rsid = data[DBSNPAdapter.INDEX['id']]
-                chr = data[DBSNPAdapter.INDEX['chr']]
+                chr = 'chr'+data[DBSNPAdapter.INDEX['chr']]
                 pos = int(data[DBSNPAdapter.INDEX['pos']])
                 ref = data[DBSNPAdapter.INDEX['ref']]
                 alt = data[DBSNPAdapter.INDEX['alt']]
@@ -52,7 +52,7 @@ class DBSNPAdapter(Adapter):
                 if check_genomic_location(self.chr, self.start, self.end, chr, pos, pos):
                     props = {}
                     if self.write_properties:
-                        props['chr'] = 'chr'+chr
+                        props['chr'] = chr
                         props['start'] = pos
                         props['end'] = pos
                         props['ref'] = ref
