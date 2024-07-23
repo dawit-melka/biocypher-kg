@@ -89,53 +89,53 @@
 #   nodes: False
 #   edges: True
 
-# pathway:
-#   adapter:
-#     module: biocypher_metta.adapters.reactome_pathway_adapter
-#     cls: ReactomePathwayAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
-#       pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
+pathway:
+  adapter:
+    module: biocypher_metta.adapters.reactome_pathway_adapter
+    cls: ReactomePathwayAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
+      pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
 
-#   outdir: reactome
-#   nodes: True
-#   edges: False
+  outdir: reactome
+  nodes: True
+  edges: False
 
-# genes_pathways:
-#   adapter:
-#     module: biocypher_metta.adapters.reactome_adapter
-#     cls: ReactomeAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
-#       label: genes_pathways
+genes_pathways:
+  adapter:
+    module: biocypher_metta.adapters.reactome_adapter
+    cls: ReactomeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
+      label: genes_pathways
 
-#   outdir: reactome
-#   nodes: False
-#   edges: True
+  outdir: reactome
+  nodes: False
+  edges: True
 
-# parent_pathway_of:
-#   adapter:
-#     module: biocypher_metta.adapters.reactome_adapter
-#     cls: ReactomeAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-#       label: parent_pathway_of
+parent_pathway_of:
+  adapter:
+    module: biocypher_metta.adapters.reactome_adapter
+    cls: ReactomeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+      label: parent_pathway_of
 
-#   outdir: reactome
-#   nodes: False
-#   edges: True
+  outdir: reactome
+  nodes: False
+  edges: True
 
-# child_pathway_of:
-#   adapter:
-#     module: biocypher_metta.adapters.reactome_adapter
-#     cls: ReactomeAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-#       label: child_pathway_of
+child_pathway_of:
+  adapter:
+    module: biocypher_metta.adapters.reactome_adapter
+    cls: ReactomeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+      label: child_pathway_of
 
-#   outdir: reactome
-#   nodes: False
-#   edges: True
+  outdir: reactome
+  nodes: False
+  edges: True
 
 go_ontology_terms:
   adapter:
@@ -151,19 +151,19 @@ go_ontology_terms:
   nodes: True
   edges: False
 
-# go_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.gene_ontology_adapter
-#     cls: GeneOntologyAdapter
-#     args:
-#       ontology: 'go'
-#       label: go_subclass_of
-#       type: edge
-#       dry_run: False
+go_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.gene_ontology_adapter
+    cls: GeneOntologyAdapter
+    args:
+      ontology: 'go'
+      label: go_subclass_of
+      type: edge
+      dry_run: False
 
-#   outdir: gene_ontology
-#   nodes: False
-#   edges: True
+  outdir: gene_ontology
+  nodes: False
+  edges: True
 
 
 # gaf:
@@ -610,109 +610,109 @@ go_ontology_terms:
 #   nodes: False
 #   edges: True
 
-# uberon:
-#   adapter:
-#     module: biocypher_metta.adapters.uberon_adapter
-#     cls: UberonAdapter
-#     args:
-#       ontology: 'uberon'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: uberon
-#   nodes: True
-#   edges: False
+uberon:
+  adapter:
+    module: biocypher_metta.adapters.uberon_adapter
+    cls: UberonAdapter
+    args:
+      ontology: 'uberon'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: uberon
+  nodes: True
+  edges: False
 
-# uberon_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.uberon_adapter
-#     cls: UberonAdapter
-#     args:
-#       ontology: 'uberon'
-#       type: edge
-#       dry_run: False
-#       label: uberon_subclass_of
-#   outdir: uberon
-#   nodes: False
-#   edges: True
+uberon_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.uberon_adapter
+    cls: UberonAdapter
+    args:
+      ontology: 'uberon'
+      type: edge
+      dry_run: False
+      label: uberon_subclass_of
+  outdir: uberon
+  nodes: False
+  edges: True
 
-# cell_line_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_line_ontology_adapter
-#     cls: CellLineOntologyAdapter
-#     args:
-#       ontology: 'clo'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: cell_line_ontology
-#   nodes: True
-#   edges: False
+cell_line_ontology:
+  adapter:
+    module: biocypher_metta.adapters.cell_line_ontology_adapter
+    cls: CellLineOntologyAdapter
+    args:
+      ontology: 'clo'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: cell_line_ontology
+  nodes: True
+  edges: False
 
-# clo_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_line_ontology_adapter
-#     cls: CellLineOntologyAdapter
-#     args:
-#       ontology: 'clo'
-#       label: clo_subclass_of
-#       type: edge
-#       dry_run: False
-#   outdir: cell_line_ontology
-#   nodes: False
-#   edges: True
+clo_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.cell_line_ontology_adapter
+    cls: CellLineOntologyAdapter
+    args:
+      ontology: 'clo'
+      label: clo_subclass_of
+      type: edge
+      dry_run: False
+  outdir: cell_line_ontology
+  nodes: False
+  edges: True
 
-# cell_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_ontology_adapter
-#     cls: CellOntologyAdapter
-#     args:
-#       ontology: 'cl'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: cell_ontology
-#   nodes: True
-#   edges: False
+cell_ontology:
+  adapter:
+    module: biocypher_metta.adapters.cell_ontology_adapter
+    cls: CellOntologyAdapter
+    args:
+      ontology: 'cl'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: cell_ontology
+  nodes: True
+  edges: False
 
-# cl_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_ontology_adapter
-#     cls: CellOntologyAdapter
-#     args:
-#       ontology: 'cl'
-#       label: cl_subclass_of
-#       type: edge
-#       dry_run: False
-#   outdir: cell_ontology
-#   nodes: False
-#   edges: True
+cl_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.cell_ontology_adapter
+    cls: CellOntologyAdapter
+    args:
+      ontology: 'cl'
+      label: cl_subclass_of
+      type: edge
+      dry_run: False
+  outdir: cell_ontology
+  nodes: False
+  edges: True
 
-# cl_capable_of:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_ontology_adapter
-#     cls: CellOntologyAdapter
-#     args:
-#       ontology: 'cl'
-#       label: cl_capable_of
-#       type: edge
-#       dry_run: False
-#   outdir: cell_ontology
-#   nodes: False
-#   edges: True
+cl_capable_of:
+  adapter:
+    module: biocypher_metta.adapters.cell_ontology_adapter
+    cls: CellOntologyAdapter
+    args:
+      ontology: 'cl'
+      label: cl_capable_of
+      type: edge
+      dry_run: False
+  outdir: cell_ontology
+  nodes: False
+  edges: True
 
-# cl_part_of:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_ontology_adapter
-#     cls: CellOntologyAdapter
-#     args:
-#       ontology: 'cl'
-#       label: cl_capable_of
-#       type: edge
-#       dry_run: False
-#   outdir: cell_ontology
-#   nodes: False
-#   edges: True
+cl_part_of:
+  adapter:
+    module: biocypher_metta.adapters.cell_ontology_adapter
+    cls: CellOntologyAdapter
+    args:
+      ontology: 'cl'
+      label: cl_capable_of
+      type: edge
+      dry_run: False
+  outdir: cell_ontology
+  nodes: False
+  edges: True
 
 
 # fabian_tf_snp:
@@ -728,44 +728,44 @@ go_ontology_terms:
 #   nodes: False
 #   edges: True
 
-# experimental_factor_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.experimental_factor_ontology_adapter
-#     cls: ExperimentalFactorOntologyAdapter
-#     args:
-#       ontology: 'efo'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: experimental_factor_ontology
-#   nodes: True
-#   edges: False
+experimental_factor_ontology:
+  adapter:
+    module: biocypher_metta.adapters.experimental_factor_ontology_adapter
+    cls: ExperimentalFactorOntologyAdapter
+    args:
+      ontology: 'efo'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: experimental_factor_ontology
+  nodes: True
+  edges: False
 
-# efo_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.experimental_factor_ontology_adapter
-#     cls: ExperimentalFactorOntologyAdapter
-#     args:
-#       ontology: 'efo'
-#       label: efo_subclass_of
-#       type: edge
-#       dry_run: False
-#   outdir: experimental_factor_ontology
-#   nodes: False
-#   edges: True
+efo_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.experimental_factor_ontology_adapter
+    cls: ExperimentalFactorOntologyAdapter
+    args:
+      ontology: 'efo'
+      label: efo_subclass_of
+      type: edge
+      dry_run: False
+  outdir: experimental_factor_ontology
+  nodes: False
+  edges: True
 
-# brenda_tissue_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
-#     cls: BrendaTissueOntologyAdapter
-#     args:
-#       ontology: 'bto'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: brenda_tissue_ontology
-#   nodes: True
-#   edges: False
+brenda_tissue_ontology:
+  adapter:
+    module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
+    cls: BrendaTissueOntologyAdapter
+    args:
+      ontology: 'bto'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: brenda_tissue_ontology
+  nodes: True
+  edges: False
 
 bto_subclass_of:
   adapter:
