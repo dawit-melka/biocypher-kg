@@ -89,67 +89,67 @@
 #   nodes: False
 #   edges: True
 
-pathway:
-  adapter:
-    module: biocypher_metta.adapters.reactome_pathway_adapter
-    cls: ReactomePathwayAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
-      pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
+# pathway:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_pathway_adapter
+#     cls: ReactomePathwayAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathways.txt
+#       pubmed_map_path: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactionPMIDS.txt
 
-  outdir: reactome
-  nodes: True
-  edges: False
+#   outdir: reactome
+#   nodes: True
+#   edges: False
 
-genes_pathways:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
-      label: genes_pathways
+# genes_pathways:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/Ensembl2Reactome_All_Levels.txt
+#       label: genes_pathways
 
-  outdir: reactome
-  nodes: False
-  edges: True
+#   outdir: reactome
+#   nodes: False
+#   edges: True
 
-parent_pathway_of:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-      label: parent_pathway_of
+# parent_pathway_of:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+#       label: parent_pathway_of
 
-  outdir: reactome
-  nodes: False
-  edges: True
+#   outdir: reactome
+#   nodes: False
+#   edges: True
 
-child_pathway_of:
-  adapter:
-    module: biocypher_metta.adapters.reactome_adapter
-    cls: ReactomeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
-      label: child_pathway_of
+# child_pathway_of:
+#   adapter:
+#     module: biocypher_metta.adapters.reactome_adapter
+#     cls: ReactomeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/reactome/ReactomePathwaysRelation.txt
+#       label: child_pathway_of
 
-  outdir: reactome
-  nodes: False
-  edges: True
+#   outdir: reactome
+#   nodes: False
+#   edges: True
 
-go_ontology_terms:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      type: node
-      dry_run: False
-      add_description: False
+# go_ontology_terms:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       type: node
+#       dry_run: False
+#       add_description: False
 
-  outdir: gene_ontology
-  nodes: True
-  edges: False
+#   outdir: gene_ontology
+#   nodes: True
+#   edges: False
 
 # go_subclass_of:
 #   adapter:
@@ -715,18 +715,18 @@ go_ontology_terms:
 #   edges: True
 
 
-# fabian_tf_snp:
-#   adapter:
-#     module: biocypher_metta.adapters.fabian_adapter
-#     cls: FabianAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/fabian/fabian_1719229097_34244_data.tsv
-#       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
-#       dbsnp_pos_map: None # will be provided by import script
-#       label: tfbs_snp
-#   outdir: fabian
-#   nodes: False
-#   edges: True
+fabian_tf_snp:
+  adapter:
+    module: biocypher_metta.adapters.fabian_adapter
+    cls: FabianAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/fabian/fabian_1719229097_34244_data.tsv
+      hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
+      dbsnp_pos_map: None # will be provided by import script
+      label: tfbs_snp
+  outdir: fabian
+  nodes: False
+  edges: True
 
 # experimental_factor_ontology:
 #   adapter:
