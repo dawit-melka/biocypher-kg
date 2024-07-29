@@ -165,17 +165,17 @@
 #   nodes: False
 #   edges: True
 
-# gaf:
-#   adapter:
-#     module: biocypher_metta.adapters.gaf_adapter
-#     cls: GAFAdapter
-#     args:
-#       filepath: ./samples/goa_human_sample.gaf.gz
+gaf:
+  adapter:
+    module: biocypher_metta.adapters.gaf_adapter
+    cls: GAFAdapter
+    args:
+      filepath: ./samples/goa_human_sample.gaf.gz
 
 
-#   outdir: gaf
-#   nodes: False
-#   edges: True
+  outdir: gaf
+  nodes: False
+  edges: True
 
 
 # coexpression:
@@ -593,18 +593,18 @@
 #   nodes: False
 #   edges: True
 
-cell_ontology:
-  adapter:
-    module: biocypher_metta.adapters.cell_ontology_adapter
-    cls: CellOntologyAdapter
-    args:
-      ontology: 'cl'
-      type: node
-      dry_run: False
-      add_description: False
-  outdir: cell_ontology
-  nodes: True
-  edges: False
+# cell_ontology:
+#   adapter:
+#     module: biocypher_metta.adapters.cell_ontology_adapter
+#     cls: CellOntologyAdapter
+#     args:
+#       ontology: 'cl'
+#       type: node
+#       dry_run: False
+#       add_description: False
+#   outdir: cell_ontology
+#   nodes: True
+#   edges: False
 
 # cl_subclass_of:
 #   adapter:
@@ -643,7 +643,7 @@ cell_ontology:
 #       dry_run: False
 #   outdir: cell_ontology
 #   nodes: False
-  edges: True
+  # edges: True
 
 # fabian_tf_snp:
 #   adapter:
@@ -697,18 +697,18 @@ cell_ontology:
 #   nodes: True
 #   edges: False
 
-bto_subclass_of:
-  adapter:
-    module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
-    cls: BrendaTissueOntologyAdapter
-    args:
-      ontology: 'bto'
-      label: bto_subclass_of
-      type: edge
-      dry_run: True
-  outdir: brenda_tissue_ontology
-  nodes: False
-  edges: True
+# bto_subclass_of:
+#   adapter:
+#     module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
+#     cls: BrendaTissueOntologyAdapter
+#     args:
+#       ontology: 'bto'
+#       label: bto_subclass_of
+#       type: edge
+#       dry_run: True
+#   outdir: brenda_tissue_ontology
+#   nodes: False
+#   edges: True
 
 polyphen2:
   adapter:
