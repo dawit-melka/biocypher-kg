@@ -789,7 +789,7 @@
 #       filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
 #   outdir: bgee
 #   nodes: False
-#   edges: True
+#   edges: True 
 
 polyphen2:
   adapter:
@@ -820,6 +820,7 @@ transcription_factor_binding_site:
       filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
       label: tfbs
+      chr: chr16
   outdir: tfbs
   nodes: True
   edges: False
@@ -832,6 +833,7 @@ gene_tfbs_association:
       filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
       label: gene_tfbs
+      chr: chr16
   outdir: tfbs
   nodes: False
   edges: True
