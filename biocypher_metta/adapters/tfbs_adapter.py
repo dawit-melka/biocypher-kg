@@ -45,7 +45,7 @@ class TfbsAdapter(Adapter):
                             props['source'] = self.source
                             props['source_url'] = self.source_url
                 
-                yield tfbs_id, self.label, props
+                    yield tfbs_id, self.label, props
     
     def get_edges(self):
         with gzip.open(self.filepath, 'rt') as f:
