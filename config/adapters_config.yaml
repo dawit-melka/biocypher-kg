@@ -485,7 +485,6 @@ epd_promoter_regulates_gene:
       hgnc_to_ensembl_map: ./aux_files/hgnc_to_ensembl.pkl
       type: promoter to gene association
       label: promoter_gene
-      chr: chr16
 
   outdir: epd
   nodes: False
@@ -533,7 +532,6 @@ peregrine_enhancer_regulates:
       tissue_ontology_map: ./aux_files/peregrine_tissues_to_ontology_map.pkl
       type: enhancer to gene association
       label: enhancer_gene
-      chr: chr16
 
   outdir: peregrine
   nodes: False
@@ -563,7 +561,6 @@ dbsuper_super_enhancer_regulates_gene:
       dbsuper_tissues_map: ./aux_files/dbsuper_tissues_map.pkl
       type: super enhancer to gene association
       label: super_enhancer_gene
-      chr: chr16
 
   outdir: dbsuper
   nodes: False
@@ -605,7 +602,6 @@ enhancer_atlas_enhancer_regulates:
       tissue_to_ontology_filepath: ./aux_files/enhancer_atlas_tissues_to_ontology.pkl
       type: enhancer to gene association
       input_label: enhancer_gene
-      chr: chr16
 
   outdir: enhancer_atlas
   nodes: False
