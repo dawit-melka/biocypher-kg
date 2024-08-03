@@ -425,7 +425,6 @@
 #   outdir: gencode/exon
 #   nodes: True
 #   edges: False
-/
 
 # dbvar_variant:
 #   adapter:
