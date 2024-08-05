@@ -51,9 +51,7 @@ class RoadMapChromatinStateAdapter(Adapter):
                         pos = self.dbsnp_rsid_map[_id]["pos"]
                         tissue = row[COL_DICT['tissue']].replace('"', '').replace("'", '')
                         cell_id = row[COL_DICT['cell']].split(" ")[0].strip()
-                        print(cell_id)
                         biological_context = self.tissue_to_ontology_id_map.get(cell_id, None) # TODO use cell type
-                        print(biological_context)
                         if check_genomic_location(self.chr, self.start, self.end, chr, pos, pos):
                             _props = {}
                             if biological_context == None:
