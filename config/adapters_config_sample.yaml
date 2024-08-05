@@ -165,17 +165,17 @@
 #   nodes: False
 #   edges: True
 
-gaf:
-  adapter:
-    module: biocypher_metta.adapters.gaf_adapter
-    cls: GAFAdapter
-    args:
-      filepath: ./samples/goa_human_sample.gaf.gz
+# gaf:
+#   adapter:
+#     module: biocypher_metta.adapters.gaf_adapter
+#     cls: GAFAdapter
+#     args:
+#       filepath: ./samples/goa_human_sample.gaf.gz
 
 
-  outdir: gaf
-  nodes: False
-  edges: True
+#   outdir: gaf
+#   nodes: False
+#   edges: True
 
 
 # coexpression:
@@ -262,44 +262,44 @@ gaf:
 #   nodes: True
 #   edges: False
 
-# roadmap_chromatin_state:
-#   adapter:
-#     module: biocypher_metta.adapters.roadmap_state_adapter
-#     cls: RoadMapChromatinStateAdapter
-#     args:
-#       filepath: ./samples/roadmap/chromatin_state
-#       tissue_to_ontology_id_map: ./aux_files/roadmap_tissues_to_ontology_map.pkl
-#       dbsnp_rsid_map: None
+roadmap_chromatin_state:
+  adapter:
+    module: biocypher_metta.adapters.roadmap_state_adapter
+    cls: RoadMapChromatinStateAdapter
+    args:
+      filepath: ./samples/roadmap/chromatin_state
+      tissue_to_ontology_id_map: ./aux_files/roadmap_ids_to_ontology.pkl
+      dbsnp_rsid_map: None
 
-#   outdir: roadmap/chromatin_state
-#   nodes: False
-#   edges: True
+  outdir: roadmap/chromatin_state
+  nodes: False
+  edges: True
 
-# roadmap_h3_mark:
-#   adapter:
-#     module: biocypher_metta.adapters.roadmap_h3_marks_adapter
-#     cls: RoadMapH3MarkAdapter
-#     args:
-#       filepath: ./samples/roadmap/h3_marks
-#       tissue_to_ontology_id_map: ./aux_files/roadmap_tissues_to_ontology_map.pkl
-#       dbsnp_rsid_map: None
+roadmap_h3_mark:
+  adapter:
+    module: biocypher_metta.adapters.roadmap_h3_marks_adapter
+    cls: RoadMapH3MarkAdapter
+    args:
+      filepath: ./samples/roadmap/h3_marks
+      tissue_to_ontology_id_map: ./aux_files/roadmap_ids_to_ontology.pkl
+      dbsnp_rsid_map: None
 
-#   outdir: roadmap/h3_mark
-#   nodes: False
-#   edges: True
+  outdir: roadmap/h3_mark
+  nodes: False
+  edges: True
 
-# roadmap_dhs:
-#   adapter:
-#     module: biocypher_metta.adapters.roadmap_dhs_adapter
-#     cls: RoadMapDHSAdapter
-#     args:
-#       filepath: ./samples/roadmap/dhs/erc2-DHS_sample.csv.gz
-#       tissue_to_ontology_id_map: ./aux_files/roadmap_tissues_to_ontology_map.pkl
-#       dbsnp_rsid_map: None
+roadmap_dhs:
+  adapter:
+    module: biocypher_metta.adapters.roadmap_dhs_adapter
+    cls: RoadMapDHSAdapter
+    args:
+      filepath: ./samples/roadmap/dhs/erc2-DHS_sample.csv.gz
+      tissue_to_ontology_id_map: ./aux_files/roadmap_ids_to_ontology.pkl
+      dbsnp_rsid_map: None
 
-#   outdir: roadmap/dhs
-#   nodes: False
-#   edges: True
+  outdir: roadmap/dhs
+  nodes: False
+  edges: True
 
 # abc:
 #   adapter:
@@ -710,48 +710,48 @@ gaf:
 #   nodes: False
 #   edges: True
 
-polyphen2:
-  adapter:
-    module: biocypher_metta.adapters.polyphen2_adapter
-    cls: PolyPhen2Adapter
-    args:
-      filepath: ./samples/polyPhen2_sample.bed.gz
+# polyphen2:
+#   adapter:
+#     module: biocypher_metta.adapters.polyphen2_adapter
+#     cls: PolyPhen2Adapter
+#     args:
+#       filepath: ./samples/polyPhen2_sample.bed.gz
   
-  outdir: polyphen-2
-  nodes: True
-  edges: False
+#   outdir: polyphen-2
+#   nodes: True
+#   edges: False
 
-bgee_gene_expressed_in_anatomical_entity:
-  adapter:
-    module: biocypher_metta.adapters.bgee_adapter
-    cls: BgeeAdapter
-    args:
-      filepath: ./samples/Homo_sapiens_expr_sample.tsv.gz
-  outdir: bgee
-  nodes: False
-  edges: True
+# bgee_gene_expressed_in_anatomical_entity:
+#   adapter:
+#     module: biocypher_metta.adapters.bgee_adapter
+#     cls: BgeeAdapter
+#     args:
+#       filepath: ./samples/Homo_sapiens_expr_sample.tsv.gz
+#   outdir: bgee
+#   nodes: False
+#   edges: True
 
 
-transcription_factor_binding_site:
-  adapter:
-    module: biocypher_metta.adapters.tfbs_adapter
-    cls: TfbsAdapter
-    args:
-      filepath: ./samples/sampleEncRegTfbsClustered.txt.gz
-      hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
-      label: tfbs
-  outdir: tfbs
-  nodes: True
-  edges: False
+# transcription_factor_binding_site:
+#   adapter:
+#     module: biocypher_metta.adapters.tfbs_adapter
+#     cls: TfbsAdapter
+#     args:
+#       filepath: ./samples/sampleEncRegTfbsClustered.txt.gz
+#       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
+#       label: tfbs
+#   outdir: tfbs
+#   nodes: True
+#   edges: False
 
-gene_tfbs_association:
-  adapter:
-    module: biocypher_metta.adapters.tfbs_adapter
-    cls: TfbsAdapter
-    args:
-      filepath: ./samples/sampleEncRegTfbsClustered.txt.gz
-      hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
-      label: gene_tfbs
-  outdir: tfbs
-  nodes: False
-  edges: True
+# gene_tfbs_association:
+#   adapter:
+#     module: biocypher_metta.adapters.tfbs_adapter
+#     cls: TfbsAdapter
+#     args:
+#       filepath: ./samples/sampleEncRegTfbsClustered.txt.gz
+#       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
+#       label: gene_tfbs
+#   outdir: tfbs
+#   nodes: False
+#   edges: True

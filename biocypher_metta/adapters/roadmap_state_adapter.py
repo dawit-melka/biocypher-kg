@@ -50,15 +50,18 @@ class RoadMapChromatinStateAdapter(Adapter):
                         chr = self.dbsnp_rsid_map[_id]["chr"]
                         pos = self.dbsnp_rsid_map[_id]["pos"]
                         tissue = row[COL_DICT['tissue']].replace('"', '').replace("'", '')
-                        biological_context = self.tissue_to_ontology_id_map.get(tissue, None) # TODO use cell type
+                        cell_id = row[COL_DICT['cell']].split(" ")[0].strip()
+                        print(cell_id)
+                        biological_context = self.tissue_to_ontology_id_map.get(cell_id, None) # TODO use cell type
+                        print(biological_context)
                         if check_genomic_location(self.chr, self.start, self.end, chr, pos, pos):
                             _props = {}
                             if biological_context == None:
-                                print(f"{tissue} not found in ontology map skipping...")
+                                print(f"{cell_id} not found in ontology map skipping...")
                                 continue
                             
                             _source = _id
-                            _target = biological_context
+                            _target = biological_context[1]
                             if self.write_properties:
                                 _props["state"] = row[COL_DICT['datatype']]
                                 if self.add_provenance:
@@ -67,5 +70,5 @@ class RoadMapChromatinStateAdapter(Adapter):
                             yield _source, _target, self.label, _props
 
                     except Exception as e:
-                        # print(f"error while parsing row: {row}, error: {e} skipping...")
+                        # print(f"{e}")
                         continue
