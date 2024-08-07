@@ -3,7 +3,7 @@ import argparse
 from neo4j import GraphDatabase
 
 # Define Neo4j connection details
-NEO4J_URI = "bolt://0.0.0.0:7687"
+NEO4J_URI = "http://0.0.0.0:7474"
 NEO4J_USER = "neo4j"
 NEO4J_PASSWORD = "icog-bioai"  # Change this to your Neo4j password
 
