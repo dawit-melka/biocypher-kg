@@ -23,6 +23,13 @@ def execute_cypher_batch(tx, cypher_batch):
     result = tx.run(cypher_batch)
     return result.consume().counters
 
+def update_counters(total_counters, new_counters):
+    total_counters['nodes_created'] = total_counters.get('nodes_created', 0) + new_counters.nodes_created
+    total_counters['relationships_created'] = total_counters.get('relationships_created', 0) + new_counters.relationships_created
+    total_counters['properties_set'] = total_counters.get('properties_set', 0) + new_counters.properties_set
+    total_counters['labels_added'] = total_counters.get('labels_added', 0) + new_counters.labels_added
+    return total_counters
+
 def load_cypher_file_in_batches(session, file_path, batch_size=1000):
     total_counters = {}
     with open(file_path, 'r') as file:
@@ -32,14 +39,12 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
                 cypher_batch.append(line.strip())
                 if len(cypher_batch) >= batch_size:
                     counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
-                    for key, value in counters.items():
-                        total_counters[key] = total_counters.get(key, 0) + value
+                    total_counters = update_counters(total_counters, counters)
                     cypher_batch = []
         
         if cypher_batch:
             counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
-            for key, value in counters.items():
-                total_counters[key] = total_counters.get(key, 0) + value
+            total_counters = update_counters(total_counters, counters)
     
     return total_counters
 
@@ -58,8 +63,7 @@ def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
             print(f"Loading {file_type} from {file_path}")
             start_time = time.time()
             counters = load_cypher_file_in_batches(session, file_path, batch_size)
-            for key, value in counters.items():
-                total_counters[key] = total_counters.get(key, 0) + value
+            total_counters = update_counters(total_counters, counters)
             end_time = time.time()
             print(f"Finished loading {file_path} in {end_time - start_time:.2f} seconds")
     
