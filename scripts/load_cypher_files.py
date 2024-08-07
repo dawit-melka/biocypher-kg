@@ -1,6 +1,7 @@
 import os
 import argparse
 from neo4j import GraphDatabase
+from neo4j.exceptions import AuthError
 
 # Define Neo4j connection details
 NEO4J_URI = "neo4j://0.0.0.0:7687"
@@ -8,7 +9,13 @@ NEO4J_USER = "neo4j"
 NEO4J_PASSWORD = "icog-bioai"  # Change this to your Neo4j password
 
 # Initialize the Neo4j driver
-driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+def get_driver():
+    try:
+        driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+        return driver
+    except AuthError as e:
+        print(f"Authentication error: {e}")
+        return None
 
 def execute_cypher_batch(session, cypher_batch):
     session.run(cypher_batch)
@@ -29,7 +36,7 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
         if cypher_batch:
             execute_cypher_batch(session, cypher_batch)
 
-def load_cypher_files(root_dir, file_type, batch_size=1000):
+def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
     files_to_load = []
     for subdir, _, files in os.walk(root_dir):
         for file in files:
@@ -53,10 +60,14 @@ if __name__ == "__main__":
     root_directory = args.directory
     batch_size = args.batch_size
 
-    # Load all nodes first
-    load_cypher_files(root_directory, 'nodes', batch_size)
+    driver = get_driver()
+    if driver:
+        # Load all nodes first
+        load_cypher_files(driver, root_directory, 'nodes', batch_size)
 
-    # Load all edges after nodes
-    load_cypher_files(root_directory, 'edges', batch_size)
+        # Load all edges after nodes
+        load_cypher_files(driver, root_directory, 'edges', batch_size)
 
-    driver.close()
+        driver.close()
+    else:
+        print("Failed to connect to Neo4j. Please check your credentials and connection settings.")
