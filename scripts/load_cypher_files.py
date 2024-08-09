@@ -24,10 +24,14 @@ def execute_cypher_batch(tx, cypher_batch):
     return result.consume().counters
 
 def update_counters(total_counters, new_counters):
-    total_counters['nodes_created'] = total_counters.get('nodes_created', 0) + new_counters.nodes_created
-    total_counters['relationships_created'] = total_counters.get('relationships_created', 0) + new_counters.relationships_created
-    total_counters['properties_set'] = total_counters.get('properties_set', 0) + new_counters.properties_set
-    total_counters['labels_added'] = total_counters.get('labels_added', 0) + new_counters.labels_added
+    if isinstance(new_counters, dict):
+        for key, value in new_counters.items():
+            total_counters[key] = total_counters.get(key, 0) + value
+    else:  # Assume it's a SummaryCounters object
+        total_counters['nodes_created'] = total_counters.get('nodes_created', 0) + new_counters.nodes_created
+        total_counters['relationships_created'] = total_counters.get('relationships_created', 0) + new_counters.relationships_created
+        total_counters['properties_set'] = total_counters.get('properties_set', 0) + new_counters.properties_set
+        total_counters['labels_added'] = total_counters.get('labels_added', 0) + new_counters.labels_added
     return total_counters
 
 def load_cypher_file_in_batches(session, file_path, batch_size=1000):

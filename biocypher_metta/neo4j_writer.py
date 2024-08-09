@@ -1,3 +1,4 @@
+import json
 import pathlib
 import os
 from biocypher import BioCypher
@@ -131,13 +132,14 @@ class Neo4jWriter:
             if k in self.excluded_properties or v is None or v == "":
                 continue
             if isinstance(v, list):
-                prop = "[" + ", ".join(f'"{e}"' for e in v) + "]"
+                prop = "[" + ", ".join(json.dumps(e) for e in v) + "]"
             elif isinstance(v, dict):
                 prop = self._format_properties(v)
             else:
-                prop = f'"{v}"'
+                prop = json.dumps(v)
             out_str.append(f"{k}: {prop}")
         return ", ".join(out_str)
+
 
     def convert_input_labels(self, label, replace_char="_"):
         """

@@ -1,0 +1,9 @@
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs0000001346" AND b.id = "go:0030533" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs000000192a" AND b.id = "go:0035195" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs00000019bc" AND b.id = "go:0000244" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs00000019bc" AND b.id = "go:0000353" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs00000019bc" AND b.id = "go:0005688" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs00000019bc" AND b.id = "go:0030621" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs00000019bc" AND b.id = "go:0046540" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs0000001a7a" AND b.id = "go:0016442" MERGE (a)-[:belongs_to {  }]->(b);
+MATCH (a:non_coding_rna) WITH a MATCH (b:go) WHERE a.id = "urs0000001a7a" AND b.id = "go:0035195" MERGE (a)-[:belongs_to {  }]->(b);

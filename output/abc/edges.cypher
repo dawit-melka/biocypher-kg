@@ -1,0 +1,11 @@
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000109193" MERGE (a)-[:activity_by_contact { score: 0.043128, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000135220" MERGE (a)-[:activity_by_contact { score: 0.015579, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000109205" MERGE (a)-[:activity_by_contact { score: 0.136843, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000132467" MERGE (a)-[:activity_by_contact { score: 0.023346, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000132463" MERGE (a)-[:activity_by_contact { score: 0.020003, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000171234" MERGE (a)-[:activity_by_contact { score: 0.019423, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000173597" MERGE (a)-[:activity_by_contact { score: 0.036485, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000173542" MERGE (a)-[:activity_by_contact { score: 0.029406, biological_context: "CLO_0003704" }]->(b);
+MATCH (a:snp) WITH a MATCH (b:gene) WHERE a.id = "rs10000009" AND b.id = "ensg00000156136" MERGE (a)-[:activity_by_contact { score: 0.021557, biological_context: "CLO_0003704" }]->(b);
+
+"MERGE (:bto {id: "orphanet:315", term_name: "Erythrokeratoderma "en cocardes"", synonyms: ["Degos genodermatosis "en cocardes""]})"
