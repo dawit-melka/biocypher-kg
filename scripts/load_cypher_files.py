@@ -49,6 +49,8 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
         if cypher_batch:
             counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
             total_counters = update_counters(total_counters, counters)
+        # cypher_query = file.read()  # Read the entire file content as a single string
+        # counters = session.write_transaction(execute_cypher_batch, cypher_query)
     
     return total_counters
 
