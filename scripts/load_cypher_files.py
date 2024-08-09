@@ -4,7 +4,7 @@ from neo4j import GraphDatabase
 from neo4j.exceptions import AuthError, ServiceUnavailable
 import time
 
-NEO4J_URI = "neo4j://0.0.0.0:7687"
+NEO4J_URI = "neo4j://100.67.47.42:7687"
 NEO4J_USER = "neo4j"
 NEO4J_PASSWORD = "icog-bioai"
 
