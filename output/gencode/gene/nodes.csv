@@ -1,0 +1,2 @@
+:ID(gene),id,:LABEL,gene_type,chr,start,end,gene_name,synonyms
+ensg00000101349,ensg00000101349,gene,protein_coding,chr20,9537370,9839076,PAK5,PAK7;"p21CDKN1A-activated kinase 7";"HGNC:15916"

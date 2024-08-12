@@ -3,6 +3,7 @@ import argparse
 from neo4j import GraphDatabase
 from neo4j.exceptions import AuthError, ServiceUnavailable
 import time
+from tqdm import tqdm
 
 NEO4J_URI = "neo4j://100.67.47.42:7687"
 NEO4J_USER = "neo4j"
@@ -36,8 +37,11 @@ def update_counters(total_counters, new_counters):
 
 def load_cypher_file_in_batches(session, file_path, batch_size=1000):
     total_counters = {}
+    total_lines = sum(1 for _ in open(file_path, 'r'))
+    
     with open(file_path, 'r') as file:
         cypher_batch = []
+        pbar = tqdm(total=total_lines, desc=f"Loading {os.path.basename(file_path)}", unit="lines")
         for line in file:
             if line.strip():  # Ignore empty lines
                 cypher_batch.append(line.strip())
@@ -45,12 +49,14 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
                     counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
                     total_counters = update_counters(total_counters, counters)
                     cypher_batch = []
+                    pbar.update(batch_size)
         
         if cypher_batch:
             counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
             total_counters = update_counters(total_counters, counters)
-        # cypher_query = file.read()  # Read the entire file content as a single string
-        # counters = session.write_transaction(execute_cypher_batch, cypher_query)
+            pbar.update(len(cypher_batch))
+        
+        pbar.close()
     
     return total_counters
 
@@ -66,7 +72,7 @@ def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
     total_counters = {}
     with driver.session() as session:
         for file_path in files_to_load:
-            print(f"Loading {file_type} from {file_path}")
+            print(f"\nProcessing {file_type} from {file_path}")
             start_time = time.time()
             counters = load_cypher_file_in_batches(session, file_path, batch_size)
             total_counters = update_counters(total_counters, counters)
