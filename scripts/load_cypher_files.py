@@ -4,6 +4,7 @@ from neo4j import GraphDatabase
 from neo4j.exceptions import AuthError, ServiceUnavailable
 import time
 from tqdm import tqdm
+import concurrent.futures
 
 NEO4J_URI = "neo4j://100.67.47.42:7687"
 NEO4J_USER = "neo4j"
@@ -20,45 +21,52 @@ def get_driver():
         print(f"Neo4j service unavailable: {e}")
         return None
 
-def execute_cypher_batch(tx, cypher_batch):
-    result = tx.run(cypher_batch)
-    return result.consume().counters
+def execute_cypher_batch(tx, statements):
+    results = []
+    for stmt in statements:
+        result = tx.run(stmt)
+        results.append(result.consume().counters)
+    return results
 
 def update_counters(total_counters, new_counters):
-    if isinstance(new_counters, dict):
-        for key, value in new_counters.items():
+    for counter in new_counters:
+        for key, value in counter.items():
             total_counters[key] = total_counters.get(key, 0) + value
-    else:  # Assume it's a SummaryCounters object
-        total_counters['nodes_created'] = total_counters.get('nodes_created', 0) + new_counters.nodes_created
-        total_counters['relationships_created'] = total_counters.get('relationships_created', 0) + new_counters.relationships_created
-        total_counters['properties_set'] = total_counters.get('properties_set', 0) + new_counters.properties_set
-        total_counters['labels_added'] = total_counters.get('labels_added', 0) + new_counters.labels_added
     return total_counters
 
-def load_cypher_file_in_batches(session, file_path, batch_size=1000):
+def load_cypher_file_in_batches(driver, file_path, batch_size=1000):
     total_counters = {}
     total_lines = sum(1 for _ in open(file_path, 'r'))
     
-    with open(file_path, 'r') as file:
-        cypher_batch = []
+    with driver.session() as session, open(file_path, 'r') as file:
+        statements = []
         pbar = tqdm(total=total_lines, desc=f"Loading {os.path.basename(file_path)}", unit="lines")
         for line in file:
             if line.strip():  # Ignore empty lines
-                cypher_batch.append(line.strip())
-                if len(cypher_batch) >= batch_size:
-                    counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
+                statements.append(line.strip())
+                if len(statements) >= batch_size:
+                    counters = session.write_transaction(execute_cypher_batch, statements)
                     total_counters = update_counters(total_counters, counters)
-                    cypher_batch = []
+                    statements = []
                     pbar.update(batch_size)
         
-        if cypher_batch:
-            counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
+        if statements:
+            counters = session.write_transaction(execute_cypher_batch, statements)
             total_counters = update_counters(total_counters, counters)
-            pbar.update(len(cypher_batch))
+            pbar.update(len(statements))
         
         pbar.close()
     
     return total_counters
+
+def process_file(args):
+    driver, file_path, batch_size = args
+    print(f"\nProcessing {file_path}")
+    start_time = time.time()
+    counters = load_cypher_file_in_batches(driver, file_path, batch_size)
+    end_time = time.time()
+    print(f"Finished loading {file_path} in {end_time - start_time:.2f} seconds")
+    return counters
 
 def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
     files_to_load = []
@@ -70,14 +78,11 @@ def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
                 files_to_load.append(os.path.join(subdir, file))
     
     total_counters = {}
-    with driver.session() as session:
-        for file_path in files_to_load:
-            print(f"\nProcessing {file_type} from {file_path}")
-            start_time = time.time()
-            counters = load_cypher_file_in_batches(session, file_path, batch_size)
-            total_counters = update_counters(total_counters, counters)
-            end_time = time.time()
-            print(f"Finished loading {file_path} in {end_time - start_time:.2f} seconds")
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(process_file, (driver, file_path, batch_size)) for file_path in files_to_load]
+        for future in concurrent.futures.as_completed(futures):
+            counters = future.result()
+            total_counters = update_counters(total_counters, [counters])
     
     return total_counters
 
