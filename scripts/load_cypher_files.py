@@ -47,7 +47,7 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000, max_lines=N
         for line in file:
             session.write_transaction(execute_cypher_batch, line)
             processed_lines += 1
-            pbar.update(processed_lines)
+            pbar.update(1)
         #     if line.strip():  # Ignore empty lines
         #         cypher_batch.append(line.strip())
         #         processed_lines += 1
