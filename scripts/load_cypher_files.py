@@ -43,22 +43,26 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000, max_lines=N
     with open(file_path, 'r') as file:
         cypher_batch = []
         pbar = tqdm(total=total_lines, desc=f"Loading {os.path.basename(file_path)}", unit="lines")
+
         for line in file:
-            if line.strip():  # Ignore empty lines
-                cypher_batch.append(line.strip())
-                processed_lines += 1
-                if len(cypher_batch) >= batch_size or (max_lines and processed_lines >= max_lines):
-                    counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
-                    total_counters = update_counters(total_counters, counters)
-                    cypher_batch = []
-                    pbar.update(min(batch_size, processed_lines))
-                    if max_lines and processed_lines >= max_lines:
-                        break
+            session.write_transaction(execute_cypher_batch, line)
+            processed_lines += 1
+            pbar.update(processed_lines)
+        #     if line.strip():  # Ignore empty lines
+        #         cypher_batch.append(line.strip())
+        #         processed_lines += 1
+        #         if len(cypher_batch) >= batch_size or (max_lines and processed_lines >= max_lines):
+        #             counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
+        #             total_counters = update_counters(total_counters, counters)
+        #             cypher_batch = []
+        #             pbar.update(min(batch_size, processed_lines))
+        #             if max_lines and processed_lines >= max_lines:
+        #                 break
         
-        if cypher_batch and (not max_lines or processed_lines < max_lines):
-            counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
-            total_counters = update_counters(total_counters, counters)
-            pbar.update(len(cypher_batch))
+        # if cypher_batch and (not max_lines or processed_lines < max_lines):
+        #     counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
+        #     total_counters = update_counters(total_counters, counters)
+        #     pbar.update(len(cypher_batch))
         
         pbar.close()
     
