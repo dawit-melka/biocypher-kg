@@ -5,6 +5,7 @@ from neo4j.exceptions import AuthError, ServiceUnavailable
 import time
 from tqdm import tqdm
 import concurrent.futures
+import threading
 
 NEO4J_URI = "neo4j://100.67.47.42:7687"
 NEO4J_USER = "neo4j"
@@ -59,14 +60,13 @@ def load_cypher_file_in_batches(driver, file_path, batch_size=1000):
     
     return total_counters
 
-def process_file(args):
-    driver, file_path, batch_size = args
+def process_file(driver, file_path, batch_size, results, index):
     print(f"\nProcessing {file_path}")
     start_time = time.time()
     counters = load_cypher_file_in_batches(driver, file_path, batch_size)
     end_time = time.time()
     print(f"Finished loading {file_path} in {end_time - start_time:.2f} seconds")
-    return counters
+    results[index] = counters
 
 def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
     files_to_load = []
@@ -78,10 +78,19 @@ def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
                 files_to_load.append(os.path.join(subdir, file))
     
     total_counters = {}
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = [executor.submit(process_file, (driver, file_path, batch_size)) for file_path in files_to_load]
-        for future in concurrent.futures.as_completed(futures):
-            counters = future.result()
+    results = [None] * len(files_to_load)
+    threads = []
+
+    for i, file_path in enumerate(files_to_load):
+        thread = threading.Thread(target=process_file, args=(driver, file_path, batch_size, results, i))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    for counters in results:
+        if counters:
             total_counters = update_counters(total_counters, [counters])
     
     return total_counters
