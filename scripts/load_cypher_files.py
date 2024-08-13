@@ -35,9 +35,10 @@ def update_counters(total_counters, new_counters):
         total_counters['labels_added'] = total_counters.get('labels_added', 0) + new_counters.labels_added
     return total_counters
 
-def load_cypher_file_in_batches(session, file_path, batch_size=1000):
+def load_cypher_file_in_batches(session, file_path, batch_size=1000, max_lines=None):
     total_counters = {}
     total_lines = sum(1 for _ in open(file_path, 'r'))
+    processed_lines = 0
     
     with open(file_path, 'r') as file:
         cypher_batch = []
@@ -45,13 +46,16 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
         for line in file:
             if line.strip():  # Ignore empty lines
                 cypher_batch.append(line.strip())
-                if len(cypher_batch) >= batch_size:
+                processed_lines += 1
+                if len(cypher_batch) >= batch_size or (max_lines and processed_lines >= max_lines):
                     counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
                     total_counters = update_counters(total_counters, counters)
                     cypher_batch = []
-                    pbar.update(batch_size)
+                    pbar.update(min(batch_size, processed_lines))
+                    if max_lines and processed_lines >= max_lines:
+                        break
         
-        if cypher_batch:
+        if cypher_batch and (not max_lines or processed_lines < max_lines):
             counters = session.write_transaction(execute_cypher_batch, "\n".join(cypher_batch))
             total_counters = update_counters(total_counters, counters)
             pbar.update(len(cypher_batch))
@@ -60,7 +64,7 @@ def load_cypher_file_in_batches(session, file_path, batch_size=1000):
     
     return total_counters
 
-def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
+def load_cypher_files(driver, root_dir, file_type, batch_size=1000, max_lines=None):
     files_to_load = []
     for subdir, _, files in os.walk(root_dir):
         for file in files:
@@ -74,7 +78,7 @@ def load_cypher_files(driver, root_dir, file_type, batch_size=1000):
         for file_path in files_to_load:
             print(f"\nProcessing {file_type} from {file_path}")
             start_time = time.time()
-            counters = load_cypher_file_in_batches(session, file_path, batch_size)
+            counters = load_cypher_file_in_batches(session, file_path, batch_size, max_lines)
             total_counters = update_counters(total_counters, counters)
             end_time = time.time()
             print(f"Finished loading {file_path} in {end_time - start_time:.2f} seconds")
@@ -85,20 +89,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load .cypher files into Neo4j.")
     parser.add_argument("directory", type=str, help="Root directory containing .cypher files")
     parser.add_argument("--batch-size", type=int, default=1000, help="Number of Cypher statements per batch")
+    parser.add_argument("--max-lines", type=int, help="Maximum number of lines to process before moving to the next file")
 
     args = parser.parse_args()
     root_directory = args.directory
     batch_size = args.batch_size
+    max_lines = args.max_lines
 
     driver = get_driver()
     if driver:
         try:
             start_time = time.time()
             
-            node_counters = load_cypher_files(driver, root_directory, 'nodes', batch_size)
+            node_counters = load_cypher_files(driver, root_directory, 'nodes', batch_size, max_lines)
             print("Node loading statistics:", node_counters)
             
-            edge_counters = load_cypher_files(driver, root_directory, 'edges', batch_size)
+            edge_counters = load_cypher_files(driver, root_directory, 'edges', batch_size, max_lines)
             print("Edge loading statistics:", edge_counters)
             
             end_time = time.time()
