@@ -1,6 +1,7 @@
 """
 Knowledge graph generation through BioCypher script
 """
+from biocypher_metta.csv_writer import CSVWriter
 from biocypher_metta.metta_writer import *
 from biocypher_metta.prolog_writer import PrologWriter
 from biocypher_metta.neo4j_writer import *
@@ -27,6 +28,10 @@ def get_writer(writer_type: str, output_dir: pathlib.Path):
         return Neo4jWriter(schema_config="config/schema_config.yaml",
                             biocypher_config="config/biocypher_config.yaml",
                             output_dir=output_dir)
+    elif writer_type == 'csv':
+        return CSVWriter(schema_config="config/schema_config.yaml",
+                            biocypher_config="config/biocypher_config.yaml",
+                            output_dir=output_dir)
     else:
         raise ValueError(f"Unknown writer type: {writer_type}")
 
@@ -36,7 +41,7 @@ def main(output_dir: Annotated[pathlib.Path, typer.Option(exists=True, file_okay
          adapters_config: Annotated[pathlib.Path, typer.Option(exists=True, file_okay=True, dir_okay=False)],
          dbsnp_rsids: Annotated[pathlib.Path, typer.Option(exists=True, file_okay=True, dir_okay=False)],
          dbsnp_pos: Annotated[pathlib.Path, typer.Option(exists=True, file_okay=True, dir_okay=False)],
-         writer_type: str = typer.Option(default="metta", help="Choose writer type: metta, prolog, neo4j"),
+         writer_type: str = typer.Option(default="metta", help="Choose writer type: metta, prolog, neo4j, csv"),
          write_properties: bool = typer.Option(True, help="Write properties to nodes and edges"),
          add_provenance: bool = typer.Option(True, help="Add provenance to nodes and edges")):
     """
