@@ -11,6 +11,8 @@ class CSVWriter:
         self.schema_config = schema_config
         self.biocypher_config = biocypher_config
         self.output_path = pathlib.Path(output_dir)
+        self.csv_delimiter = '|'
+        self.array_delimiter = ';'
 
         if not os.path.exists(output_dir):
             self.output_path.mkdir(parents=True, exist_ok=True)
@@ -55,15 +57,18 @@ class CSVWriter:
 
     def preprocess_value(self, value):
         if isinstance(value, list):
-            return '|'.join(str(item) for item in value)
+            return self.array_delimiter.join(str(item).replace(self.array_delimiter, ' ').replace(self.csv_delimiter, ' ') for item in value)
         elif isinstance(value, rdflib.term.Literal):
-            return str(value)
+            return str(value).replace(self.csv_delimiter, '').replace(self.array_delimiter, '')
+        elif isinstance(value, str):
+            return value.replace(self.csv_delimiter, '').replace(self.array_delimiter, '')
+
         return value
 
     def write_to_csv(self, data, file_path):
         headers = list(data[0].keys())
         with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers)
+            writer = csv.DictWriter(csvfile, fieldnames=headers, delimiter=self.csv_delimiter)
             writer.writeheader()
             for row in data:
                 processed_row = {k: self.preprocess_value(v) for k, v in row.items()}
@@ -81,38 +86,42 @@ class CSVWriter:
         # Ensure the output directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # File paths for CSV and Cypher files
-        csv_file_path = output_dir / "nodes.csv"
-        cypher_file_path = output_dir / "nodes.cypher"
-
         # Prepare node data for CSV
-        all_nodes = []
+        node_groups = {}
         for node in nodes:
             id, label, properties = node
             if "." in label:
                 label = label.split(".")[1]
             label = label.lower()
-            all_nodes.append({'id': id.lower(), 'label': label, **properties})
+            if label not in node_groups:
+                node_groups[label] = []
+            node_groups[label].append({'id': id.lower(), 'label': label, **properties})
 
-        # Write node data to CSV
-        self.write_to_csv(all_nodes, csv_file_path)
+        # Write node data to CSV and generate Cypher queries
+        for label, node_data in node_groups.items():
+            csv_file_path = output_dir / f"nodes_{label}.csv"
+            cypher_file_path = output_dir / f"nodes_{label}.cypher"
+            self.write_to_csv(node_data, csv_file_path)
 
-        # Generate Cypher query to load nodes from the CSV file using the absolute path
-        absolute_path = csv_file_path.resolve().as_posix()
-        with open(cypher_file_path, 'w') as f:
-            cypher_query = f"""
-            CALL apoc.periodic.iterate(
-              "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row RETURN row",
-              "MERGE (n:Node {{id: row.id}})
-               SET n += apoc.map.removeKeys(row, ['id'])",
-              {{batchSize:1000, parallel:false}}
-            )
-            YIELD batches, total
-            RETURN batches, total
-            """
-            f.write(cypher_query)
+            # Generate Cypher query for loading nodes
+            # absolute_path = csv_file_path.resolve().as_posix()
+            with open(cypher_file_path, 'w') as f:
+                cypher_query = f"""
+CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;
 
-        logger.info(f"Finished writing out node import query for: {output_dir}")
+CALL apoc.periodic.iterate(
+    "LOAD CSV WITH HEADERS FROM 'file:///nodes_{label}.csv' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
+    "MERGE (n:{label} {{id: row.id}})
+    SET n += apoc.map.removeKeys(row, ['id'])",
+    {{batchSize:1000, parallel:true, concurrency:4}}
+)
+YIELD batches, total
+RETURN batches, total;
+                """
+                f.write(cypher_query)
+            logger.info(f"Finished writing out node import queries for: {output_dir}, node type: {label}")
+
+        logger.info(f"Finished writing out all node import queries for: {output_dir}")
 
     def write_edges(self, edges, path_prefix=None, adapter_name=None):
         # Determine the output directory based on the given parameters
@@ -130,12 +139,13 @@ class CSVWriter:
         edge_groups = {}
         for edge in edges:
             source_id, target_id, label, properties = edge
+            label = label.lower()
             if label not in edge_groups:
                 edge_groups[label] = []
             edge_groups[label].append({
                 'source_id': source_id.lower(),
                 'target_id': target_id.lower(),
-                'label': label.lower(),
+                'label': label,
                 **properties
             })
 
@@ -144,33 +154,33 @@ class CSVWriter:
             # File paths for CSV and Cypher files
             csv_file_path = output_dir / f"edges_{label}.csv"
             cypher_file_path = output_dir / f"edges_{label}.cypher"
-
+            
+            source_type = self.edge_node_types[label]["source"]
+            target_type = self.edge_node_types[label]["target"]
+            output_label = self.edge_node_types[label]["output_label"]
+            if output_label is not None:
+                label = output_label
             # Write edge data to CSV
             self.write_to_csv(edge_data, csv_file_path)
 
             # Generate Cypher query to load edges from the CSV file using the absolute path
-            absolute_path = csv_file_path.resolve().as_posix()
+            # absolute_path = csv_file_path.resolve().as_posix()
             with open(cypher_file_path, 'w') as f:
                 cypher_query = f"""
-                CALL apoc.periodic.iterate(
-                  "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row RETURN row",
-                  "MATCH (source:Node {{id: row.source_id}})
-                   MATCH (target:Node {{id: row.target_id}})
-                   CALL apoc.create.relationship(
-                     source, 
-                     row.label, 
-                     apoc.map.removeKeys(row, ['source_id', 'target_id', 'label']), 
-                     target
-                   ) YIELD rel
-                   RETURN count(rel)",
-                  {{batchSize:500, parallel:false}}
-                )
-                YIELD batches, total
-                RETURN batches, total
+CALL apoc.periodic.iterate(
+    "LOAD CSV WITH HEADERS FROM 'file:///edges_{label}.csv' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
+    "MATCH (source:{source_type} {{id: row.source_id}})
+    MATCH (target:{target_type} {{id: row.target_id}})
+    MERGE (source)-[r:{label}]->(target)
+    SET r += apoc.map.removeKeys(row, ['source_id', 'target_id', 'label'])",
+    {{batchSize:1000, parallel:true, concurrency:4}}
+)
+YIELD batches, total
+RETURN batches, total;
                 """
                 f.write(cypher_query)
 
-            logger.info(f"Finished writing out edge import query for: {output_dir}, edge type: {label}")
+            logger.info(f"Finished writing out edge import queries for: {output_dir}, edge type: {label}")
 
         logger.info(f"Finished writing out all edge import queries for: {output_dir}")
 

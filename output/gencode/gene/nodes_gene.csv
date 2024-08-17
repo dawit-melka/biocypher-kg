@@ -1,0 +1,53 @@
+id|label|gene_type|chr|start|end|gene_name|synonyms
+ensg00000101349|gene|protein_coding|chr20|9537370|9839076|PAK5|serine/threonine-protein kinase PAK 5;serine/threonine-protein kinase PAK 7;PAK7;p21 (RAC1) activated kinase 7;PAK5;protein kinase PAK5;PAK-5;serine/threonine-protein kinase PAK7;p21-activated kinase 5;PAK-7;p21-activated kinase 7;p21 (RAC1) activated kinase 5;p21(CDKN1A)-activated kinase 7;HGNC:15916;p21CDKN1A-activated kinase 7;p21 protein (Cdc42/Rac)-activated kinase 7
+ensg00000286740|gene|lncRNA|chr20|9562941|9571257|ENSG00000286740|
+ensg00000232738|gene|lncRNA|chr20|9575608|9577689|ENSG00000232738|
+ensg00000286470|gene|lncRNA|chr20|9835556|9873900|ENSG00000286470|
+ensg00000243961|gene|lncRNA|chr20|9986088|10007116|PARAL1|HGNC:53772;PPARG activating RBM14 associated lncRNA 1;PPARgamma-activator RBM14-associated lncRNA;PARAL1
+ensg00000132623|gene|protein_coding|chr20|9986126|10058303|ANKEF1|ankyrin repeat domain-containing protein 5;ankyrin repeat and EF-hand domain-containing protein 1;ankyrin repeat and EF-hand domain containing 1;ANKEF1;ANKRD5;HGNC:15803
+ensg00000227906|gene|lncRNA|chr20|10006381|10368831|SNAP25-AS1|SNAP25-AS1;SNAP25 antisense RNA 1 (non-protein coding);SNAP25 antisense RNA 1;HGNC:44312
+ensg00000276525|gene|misc_RNA|chr20|10025917|10026168|Metazoa_SRP|
+ensg00000132639|gene|protein_coding|chr20|10172395|10308258|SNAP25|dJ1068F16.2;synaptosomal-associated protein 25;RIC-4;resistance to inhibitors of cholinesterase 4 homolog;CMS18;SNAP-25;bA416N4.2;SEC9;synaptosome associated protein 25kDa;RIC4;SUP;HGNC:11132;synaptosome associated protein 25;SNAP25;synaptosomal-associated protein, 25kDa;SNAP
+ensg00000230506|gene|lncRNA|chr20|10172522|10200824|ENSG00000230506|
+ensg00000232448|gene|lncRNA|chr20|10172701|10186740|ENSG00000232448|
+ensg00000289505|gene|lncRNA|chr20|10308422|10309905|ENSG00000289505|
+ensg00000286936|gene|lncRNA|chr20|10317889|10318753|ENSG00000286936|
+ensg00000237005|gene|processed_pseudogene|chr20|10334419|10334698|HIGD1AP15|HGNC:43010;HIG1 hypoxia inducible domain family member 1A pseudogene 15;HIGD1AP15
+ensg00000214835|gene|processed_pseudogene|chr20|10349157|10349628|RPL23AP6|RPL23A_36_1683;dJ1068F16.1;ribosomal protein L23a pseudogene 6;HGNC:16555;RPL23AP6
+ensg00000230750|gene|processed_pseudogene|chr20|10385779|10387806|SDAD1P2|SDAD1P2;HGNC:31404;SDA1 domain containing 1 pseudogene 2
+ensg00000125863|gene|protein_coding|chr20|10401009|10434222|MKKS|HMCS;MKKS centrosomal shuttling protein;HGNC:7108;MKKS;KMS;alternative protein MKKS;Bardet-Biedl syndrome 6 protein;molecular chaperone MKKS;BBS6;McKusick-Kaufman/Bardet-Biedl syndromes putative chaperonin;MKS
+ensg00000285508|gene|protein_coding|chr20|10413520|10431922|MKKS|LOC128706666;uncharacterized LOC128706666
+ensg00000285723|gene|protein_coding|chr20|10420546|10420737|MKKS|uncharacterized LOC128706665;LOC128706665
+ensg00000149346|gene|protein_coding|chr20|10435305|10636829|SLX4IP|bA254M13.1;HGNC:16225;protein SLX4IP;bA204H22.1;C20orf94;SLX4 interacting protein;SLX4IP;dJ1099D15.3
+ensg00000235036|gene|processed_pseudogene|chr20|10612861|10614229|ENSG00000235036|
+ensg00000101384|gene|protein_coding|chr20|10637684|10673999|JAG1|jagged canonical Notch ligand 1;protein jagged-1;AWS;HGNC:6188;AGS1;AHD;CMT2HH;CD339;DCHE;HJ1;AGS;JAG1;JAGL1
+ensg00000273745|gene|miRNA|chr20|10649636|10649695|MIR6870|hsa-mir-6870;microRNA 6870;MIR6870;microRNA mir-6870;HGNC:50184
+ensg00000270792|gene|lncRNA|chr20|10672695|10994924|ENSG00000270792|
+ensg00000224961|gene|lncRNA|chr20|10696949|10754033|LINC01752|long intergenic non-protein coding RNA 1752;HGNC:52540;LINC01752
+ensg00000234900|gene|lncRNA|chr20|10753278|10765286|ENSG00000234900|
+ensg00000232900|gene|lncRNA|chr20|10875333|10909279|ENSG00000232900|LOC101929413
+ensg00000217809|gene|processed_pseudogene|chr20|10888582|10889088|FAT1P1|FAT tumor suppressor homolog 1 pseudogene 1;FAT tumor suppressor homolog pseudogene 1;dJ697P8.1;FAT1P1;HGNC:16582;FAT atypical cadherin 1 pseudogene 1
+ensg00000125899|gene|lncRNA|chr20|10996293|11029455|LINC02871|C20orf187;long intergenic non-protein coding RNA 2871;LINC02871;HGNC:16180
+ensg00000270777|gene|lncRNA|chr20|11001304|11001763|ENSG00000270777|
+ensg00000230990|gene|lncRNA|chr20|11234170|11301525|ENSG00000230990|
+ensg00000235544|gene|processed_pseudogene|chr20|11345383|11345855|RPS11P1|ribosomal protein S11 pseudogene 1;RPS11_3_1684;RPS11P1;dJ1060K6.1;HGNC:16553
+ensg00000282478|gene|lncRNA|chr20|11536406|11541647|ENSG00000282478|
+ensg00000287754|gene|lncRNA|chr20|11566484|11581335|ENSG00000287754|
+ensg00000271397|gene|processed_pseudogene|chr20|11608436|11609048|ENSG00000271397|
+ensg00000237256|gene|processed_pseudogene|chr20|11621051|11621477|PGAM3P|phosphoglycerate mutase 3, pseudogene;HGNC:16557;PGAM3P;dJ1128N12.1
+ensg00000261411|gene|lncRNA|chr20|11685144|11687323|ENSG00000261411|
+ensg00000228422|gene|lncRNA|chr20|11800463|11878429|LINC00687|long intergenic non-protein coding RNA 687;C20orf61;LINC00687;HGNC:16194;dJ1012F16.1
+ensg00000222281|gene|misc_RNA|chr20|11818821|11819091|RN7SKP111|RN7SKP111;RN7SK pseudogene 111;RNA, 7SK small nuclear pseudogene 111;HGNC:45835
+ensg00000271298|gene|processed_pseudogene|chr20|11838355|11838574|ENSG00000271298|
+ensg00000132640|gene|protein_coding|chr20|11890723|11926609|BTBD3|HGNC:15854;BTBD3;BTB/POZ domain-containing protein 3;dJ742J24.1;BTB domain containing 3;BTB (POZ) domain containing 3
+ensg00000236526|gene|lncRNA|chr20|11909404|11918677|BTBD3-AS1|BTBD3 antisense RNA 1;HGNC:40728;BTBD3-AS1
+ensg00000235292|gene|lncRNA|chr20|12243308|12318221|ENSG00000235292|
+ensg00000230437|gene|lncRNA|chr20|12305613|12316485|ENSG00000230437|
+ensg00000235698|gene|processed_pseudogene|chr20|12380056|12381255|PA2G4P2|PA2G4L5;proliferation-associated 2G4, 38kDa pseudogene;PA2G4P2;bA102J14.2;HGNC:16531;proliferation-associated 2G4 pseudogene 2
+ensg00000233048|gene|lncRNA|chr20|12865202|12952519|LINC01722|HGNC:52510;LINC01722;long intergenic non-protein coding RNA 1722
+ensg00000269931|gene|lncRNA|chr20|12934877|12937097|ENSG00000269931|
+ensg00000286087|gene|lncRNA|chr20|12936262|12940902|ENSG00000286087|
+ensg00000234265|gene|lncRNA|chr20|12950288|13008417|LINC01723|HGNC:52511;LINC01723;long intergenic non-protein coding RNA 1723
+ensg00000172296|gene|protein_coding|chr20|13008972|13169103|SPTLC3|SPT 3;HGNC:16253;long chain base biosynthesis protein 3;C20orf38;hLCB2b;serine palmitoyltransferase long chain base subunit 3;dJ718P11.1;SPTLC3;serine palmitoyltransferase 3;serine palmitoyltransferase, long chain base subunit 2-like (aminotransferase 2);serine-palmitoyl-CoA transferase 3;dJ718P11;LCB 3;long chain base biosynthesis protein 2b;SPTLC2L;LCB2B;SPT3;LCB3
+ensg00000197976|gene|protein_coding|chrX|1591604|1602520|AKAP17A|PRKA17A;DXYS155E;CXYorf3;721P;XE7;protein kinase A-anchoring protein 17A;splicing factor, arginine/serine-rich 17A;CCDC133;pseudoautosomal gene XE7;AKAP-17A;XE7Y;HGNC:18783;A-kinase anchor protein 17A;A kinase (PRKA) anchor protein 17A;A-kinase anchoring protein 17A;SFRS17A;B-lymphocyte surface antigen;AKAP17A
+ensg00000197976_par_y|gene|protein_coding|chrY|1591604|1602520|AKAP17A|PRKA17A;DXYS155E;CXYorf3;721P;XE7;protein kinase A-anchoring protein 17A;splicing factor, arginine/serine-rich 17A;CCDC133;pseudoautosomal gene XE7;AKAP-17A;XE7Y;HGNC:18783;A-kinase anchor protein 17A;A kinase (PRKA) anchor protein 17A;A-kinase anchoring protein 17A;SFRS17A;B-lymphocyte surface antigen;AKAP17A
