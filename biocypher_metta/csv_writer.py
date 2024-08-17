@@ -104,13 +104,13 @@ class CSVWriter:
             self.write_to_csv(node_data, csv_file_path)
 
             # Generate Cypher query for loading nodes
-            # absolute_path = csv_file_path.resolve().as_posix()
+            absolute_path = csv_file_path.resolve().as_posix()
             with open(cypher_file_path, 'w') as f:
                 cypher_query = f"""
 CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;
 
 CALL apoc.periodic.iterate(
-    "LOAD CSV WITH HEADERS FROM 'file:///nodes_{label}.csv' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
+    "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
     "MERGE (n:{label} {{id: row.id}})
     SET n += apoc.map.removeKeys(row, ['id'])",
     {{batchSize:1000, parallel:true, concurrency:4}}
@@ -164,11 +164,11 @@ RETURN batches, total;
             self.write_to_csv(edge_data, csv_file_path)
 
             # Generate Cypher query to load edges from the CSV file using the absolute path
-            # absolute_path = csv_file_path.resolve().as_posix()
+            absolute_path = csv_file_path.resolve().as_posix()
             with open(cypher_file_path, 'w') as f:
                 cypher_query = f"""
 CALL apoc.periodic.iterate(
-    "LOAD CSV WITH HEADERS FROM 'file:///edges_{label}.csv' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
+    "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
     "MATCH (source:{source_type} {{id: row.source_id}})
     MATCH (target:{target_type} {{id: row.target_id}})
     MERGE (source)-[r:{label}]->(target)
