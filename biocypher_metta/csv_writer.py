@@ -1,3 +1,4 @@
+import json
 import pathlib
 import os
 import csv
@@ -5,6 +6,9 @@ from biocypher import BioCypher
 from biocypher._logger import logger
 import networkx as nx
 import rdflib
+from io import StringIO
+import multiprocessing as mp
+from functools import lru_cache
 
 class CSVWriter:
     def __init__(self, schema_config, biocypher_config, output_dir):
@@ -25,6 +29,7 @@ class CSVWriter:
         self.create_edge_types()
 
         self.excluded_properties = []
+        self.translation_table = str.maketrans({self.csv_delimiter: '', self.array_delimiter: ' '})
 
     def create_edge_types(self):
         schema = self.bcy._get_ontology_mapping()._extend_schema()
@@ -54,25 +59,48 @@ class CSVWriter:
                             output_label.lower() if output_label is not None else None
                         ),
                     }
-
+    @lru_cache(maxsize=1024)
+    def literal_to_str(self, literal):
+        return str(literal)
+    
     def preprocess_value(self, value):
-        if isinstance(value, list):
-            return self.array_delimiter.join(str(item).replace(self.array_delimiter, ' ').replace(self.csv_delimiter, ' ') for item in value)
-        elif isinstance(value, rdflib.term.Literal):
-            return str(value).replace(self.csv_delimiter, '').replace(self.array_delimiter, '')
-        elif isinstance(value, str):
-            return value.replace(self.csv_delimiter, '').replace(self.array_delimiter, '')
-
+        value_type = type(value)
+        
+        if value_type is list:
+            return json.dumps([self.preprocess_value(item) for item in value])
+        
+        if value_type is rdflib.term.Literal:
+            return self.literal_to_str(value).translate(self.translation_table)
+        
+        if value_type is str:
+            return value.translate(self.translation_table)
+        
         return value
-
-    def write_to_csv(self, data, file_path):
-        headers = list(data[0].keys())
-        with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers, delimiter=self.csv_delimiter)
-            writer.writeheader()
-            for row in data:
-                processed_row = {k: self.preprocess_value(v) for k, v in row.items()}
+    def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
+        with open(file_path, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=csv_delimiter)
+            for row in chunk:
+                processed_row = [preprocess_value(row.get(header, '')) for header in headers]
                 writer.writerow(processed_row)
+
+    def write_to_csv(self, data, file_path, chunk_size=10000):
+        headers = list(data[0].keys())
+        
+        # Write headers
+        with open(file_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=self.csv_delimiter)
+            writer.writerow(headers)
+        
+        # Process and write data in chunks
+        num_processes = mp.cpu_count()
+        pool = mp.Pool(processes=num_processes)
+        
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i+chunk_size]
+            pool.apply_async(self.write_chunk, (chunk, headers, file_path, self.csv_delimiter, self.preprocess_value))
+        
+        pool.close()
+        pool.join()
 
     def write_nodes(self, nodes, path_prefix=None, adapter_name=None):
         # Determine the output directory based on the given parameters
@@ -112,7 +140,8 @@ CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;
 CALL apoc.periodic.iterate(
     "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
     "MERGE (n:{label} {{id: row.id}})
-    SET n += apoc.map.removeKeys(row, ['id'])",
+    SET n += apoc.map.removeKeys(row, ['id'])"
+    SET n.list_field = apoc.convert.fromJsonList(row.list_field)",
     {{batchSize:1000, parallel:true, concurrency:4}}
 )
 YIELD batches, total

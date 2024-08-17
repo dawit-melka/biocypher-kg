@@ -1,6 +1,6 @@
 
 CALL apoc.periodic.iterate(
-    "LOAD CSV WITH HEADERS FROM 'file:///edges_transcribed_to.csv' AS row FIELDTERMINATOR '|' RETURN row",
+    "LOAD CSV WITH HEADERS FROM 'file:////home/developer/Desktop/projects/biocypher-kg/output/gencode/transcript/edges_transcribed_to.csv' AS row FIELDTERMINATOR '|' RETURN row",
     "MATCH (source:gene {id: row.source_id})
     MATCH (target:transcript {id: row.target_id})
     MERGE (source)-[r:transcribed_to]->(target)
