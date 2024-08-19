@@ -597,18 +597,18 @@
 #   nodes: False
 #   edges: True
 
-# uberon:
-#   adapter:
-#     module: biocypher_metta.adapters.uberon_adapter
-#     cls: UberonAdapter
-#     args:
-#       ontology: 'uberon'
-#       type: node
-#       dry_run: False
-#       add_description: False
-#   outdir: uberon
-#   nodes: True
-#   edges: False
+uberon:
+  adapter:
+    module: biocypher_metta.adapters.uberon_adapter
+    cls: UberonAdapter
+    args:
+      ontology: 'uberon'
+      type: node
+      dry_run: False
+      add_description: False
+  outdir: uberon
+  nodes: True
+  edges: False
 
 # uberon_subclass_of:
 #   adapter:
@@ -715,18 +715,18 @@
 #   nodes: False
 #   edges: True
 
-# experimental_factor_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.experimental_factor_ontology_adapter
-#     cls: ExperimentalFactorOntologyAdapter
-#     args:
-#       ontology: 'efo'
-#       type: node
-#       dry_run: False
-#       add_description: True
-#   outdir: experimental_factor_ontology
-#   nodes: True
-#   edges: False
+experimental_factor_ontology:
+  adapter:
+    module: biocypher_metta.adapters.experimental_factor_ontology_adapter
+    cls: ExperimentalFactorOntologyAdapter
+    args:
+      ontology: 'efo'
+      type: node
+      dry_run: False
+      add_description: True
+  outdir: experimental_factor_ontology
+  nodes: True
+  edges: False
 
 # efo_subclass_of:
 #   adapter:
@@ -741,18 +741,18 @@
 #   nodes: False
 #   edges: True
 
-brenda_tissue_ontology:
-  adapter:
-    module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
-    cls: BrendaTissueOntologyAdapter
-    args:
-      ontology: 'bto'
-      type: node
-      dry_run: False
-      add_description: True
-  outdir: brenda_tissue_ontology
-  nodes: True
-  edges: False
+# brenda_tissue_ontology:
+#   adapter:
+#     module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
+#     cls: BrendaTissueOntologyAdapter
+#     args:
+#       ontology: 'bto'
+#       type: node
+#       dry_run: False
+#       add_description: True
+#   outdir: brenda_tissue_ontology
+#   nodes: True
+#   edges: False
 
 # bto_subclass_of:
 #   adapter:
