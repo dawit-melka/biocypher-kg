@@ -29,7 +29,10 @@ class CSVWriter:
         self.create_edge_types()
 
         self.excluded_properties = []
-        self.translation_table = str.maketrans({self.csv_delimiter: '', self.array_delimiter: ' '})
+        self.translation_table = str.maketrans({self.csv_delimiter: '', 
+                                                self.array_delimiter: ' ', 
+                                                "'": "",
+                                                '"': ""})
 
     def create_edge_types(self):
         schema = self.bcy._get_ontology_mapping()._extend_schema()
