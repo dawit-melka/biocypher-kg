@@ -59,9 +59,6 @@ class CSVWriter:
                             output_label.lower() if output_label is not None else None
                         ),
                     }
-    @lru_cache(maxsize=1024)
-    def literal_to_str(self, literal):
-        return str(literal)
     
     def preprocess_value(self, value):
         value_type = type(value)
@@ -70,12 +67,13 @@ class CSVWriter:
             return json.dumps([self.preprocess_value(item) for item in value])
         
         if value_type is rdflib.term.Literal:
-            return self.literal_to_str(value).translate(self.translation_table)
+            return str(value).translate(self.translation_table)
         
         if value_type is str:
             return value.translate(self.translation_table)
         
         return value
+    
     def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
         with open(file_path, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=csv_delimiter)
@@ -83,7 +81,7 @@ class CSVWriter:
                 processed_row = [preprocess_value(row.get(header, '')) for header in headers]
                 writer.writerow(processed_row)
 
-    def write_to_csv(self, data, file_path, chunk_size=10000):
+    def write_to_csv(self, data, file_path, chunk_size=1000):
         headers = list(data[0].keys())
         
         # Write headers
@@ -140,8 +138,7 @@ CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;
 CALL apoc.periodic.iterate(
     "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
     "MERGE (n:{label} {{id: row.id}})
-    SET n += apoc.map.removeKeys(row, ['id'])"
-    SET n.list_field = apoc.convert.fromJsonList(row.list_field)",
+    SET n += apoc.map.removeKeys(row, ['id'])",
     {{batchSize:1000, parallel:true, concurrency:4}}
 )
 YIELD batches, total
