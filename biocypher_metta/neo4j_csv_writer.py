@@ -33,6 +33,7 @@ class Neo4jCSVWriter:
                                                 self.array_delimiter: ' ', 
                                                 "'": "",
                                                 '"': ""})
+        self.ontologies = set(['go', 'bto', 'efo', 'cl', 'clo'])
 
     def create_edge_types(self):
         schema = self.bcy._get_ontology_mapping()._extend_schema()
@@ -79,7 +80,7 @@ class Neo4jCSVWriter:
     
     def preprocess_id(self, prev_id):
         replace_map = {' ': '_', ':':'_'}
-        id = prev_id.lower().strip().translate(replace_map)
+        id = prev_id.lower().strip().replace(' ', '_').replace(':', '_')
         return id
     
     def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
@@ -140,13 +141,14 @@ class Neo4jCSVWriter:
 
             # Generate Cypher query for loading nodes
             absolute_path = csv_file_path.resolve().as_posix()
+            additional_label = ":ontology_term" if label in self.ontologies else ""
             with open(cypher_file_path, 'w') as f:
                 cypher_query = f"""
 CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.id IS UNIQUE;
 
 CALL apoc.periodic.iterate(
     "LOAD CSV WITH HEADERS FROM 'file:///{absolute_path}' AS row FIELDTERMINATOR '{self.csv_delimiter}' RETURN row",
-    "MERGE (n:{label} {{id: row.id}})
+    "MERGE (n:{label}{additional_label} {{id: row.id}})
     SET n += apoc.map.removeKeys(row, ['id'])",
     {{batchSize:1000, parallel:true, concurrency:4}}
 )
