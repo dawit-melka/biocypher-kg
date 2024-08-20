@@ -10,7 +10,7 @@ from io import StringIO
 import multiprocessing as mp
 from functools import lru_cache
 
-class CSVWriter:
+class Neo4jCSVWriter:
     def __init__(self, schema_config, biocypher_config, output_dir):
         self.schema_config = schema_config
         self.biocypher_config = biocypher_config
@@ -77,6 +77,11 @@ class CSVWriter:
         
         return value
     
+    def preprocess_id(self, prev_id):
+        replace_map = {' ': '_', ':':'_'}
+        id = prev_id.lower().strip().translate(replace_map)
+        return id
+    
     def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
         with open(file_path, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=csv_delimiter)
@@ -124,7 +129,8 @@ class CSVWriter:
             label = label.lower()
             if label not in node_groups:
                 node_groups[label] = []
-            node_groups[label].append({'id': id.lower(), 'label': label, **properties})
+            id = self.preprocess_id(id)
+            node_groups[label].append({'id': id, 'label': label, **properties})
 
         # Write node data to CSV and generate Cypher queries
         for label, node_data in node_groups.items():
@@ -148,7 +154,7 @@ YIELD batches, total
 RETURN batches, total;
                 """
                 f.write(cypher_query)
-            logger.info(f"Finished writing out node import queries for: {output_dir}, node type: {label}")
+            # logger.info(f"Finished writing out node import queries for: {output_dir}, node type: {label}")
 
         logger.info(f"Finished writing out all node import queries for: {output_dir}")
 
@@ -172,8 +178,8 @@ RETURN batches, total;
             if label not in edge_groups:
                 edge_groups[label] = []
             edge_groups[label].append({
-                'source_id': source_id.lower(),
-                'target_id': target_id.lower(),
+                'source_id': self.preprocess_id(source_id),
+                'target_id': self.preprocess_id(target_id),
                 'label': label,
                 **properties
             })
@@ -209,7 +215,7 @@ RETURN batches, total;
                 """
                 f.write(cypher_query)
 
-            logger.info(f"Finished writing out edge import queries for: {output_dir}, edge type: {label}")
+            logger.info(f"Finished writing out edge import queries for: edge type: {label}")
 
         logger.info(f"Finished writing out all edge import queries for: {output_dir}")
 

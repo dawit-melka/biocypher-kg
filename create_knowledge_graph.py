@@ -1,7 +1,7 @@
 """
 Knowledge graph generation through BioCypher script
 """
-from biocypher_metta.csv_writer import CSVWriter
+from biocypher_metta.neo4j_csv_writer import Neo4jCSVWriter
 from biocypher_metta.metta_writer import *
 from biocypher_metta.prolog_writer import PrologWriter
 from biocypher_metta.neo4j_writer import *
@@ -29,7 +29,7 @@ def get_writer(writer_type: str, output_dir: pathlib.Path):
                             biocypher_config="config/biocypher_config.yaml",
                             output_dir=output_dir)
     elif writer_type == 'csv':
-        return CSVWriter(schema_config="config/schema_config.yaml",
+        return Neo4jCSVWriter(schema_config="config/schema_config.yaml",
                             biocypher_config="config/biocypher_config.yaml",
                             output_dir=output_dir)
     else:
