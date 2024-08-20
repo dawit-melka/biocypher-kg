@@ -79,8 +79,8 @@ class Neo4jCSVWriter:
         return value
     
     def preprocess_id(self, prev_id):
-        replace_map = {' ': '_', ':':'_'}
-        id = prev_id.lower().strip().replace(' ', '_').replace(':', '_')
+        replace_map = str.maketrans({' ': '_', ':':'_'})
+        id = prev_id.lower().strip().translate(replace_map)
         return id
     
     def write_chunk(self, chunk, headers, file_path, csv_delimiter, preprocess_value):
