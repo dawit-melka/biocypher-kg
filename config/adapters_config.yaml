@@ -694,7 +694,7 @@ cl_part_of:
     cls: CellOntologyAdapter
     args:
       ontology: 'cl'
-      label: cl_capable_of
+      label: cl_part_of
       type: edge
       dry_run: False
   outdir: cell_ontology

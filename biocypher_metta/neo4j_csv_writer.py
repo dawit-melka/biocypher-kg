@@ -33,7 +33,7 @@ class Neo4jCSVWriter:
                                                 self.array_delimiter: ' ', 
                                                 "'": "",
                                                 '"': ""})
-        self.ontologies = set(['go', 'bto', 'efo', 'cl', 'clo'])
+        self.ontologies = set(['go', 'bto', 'efo', 'cl', 'clo', 'uberon'])
 
     def create_edge_types(self):
         schema = self.bcy._get_ontology_mapping()._extend_schema()
