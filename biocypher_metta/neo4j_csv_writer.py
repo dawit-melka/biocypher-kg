@@ -88,6 +88,7 @@ class Neo4jCSVWriter:
             writer = csv.writer(csvfile, delimiter=csv_delimiter)
             for row in chunk:
                 processed_row = [preprocess_value(row.get(header, '')) for header in headers]
+                processed_row[2] = processed_row[1].split('_')[0]
                 writer.writerow(processed_row)
 
     def write_to_csv(self, data, file_path, chunk_size=1000):

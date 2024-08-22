@@ -675,31 +675,31 @@
 #   nodes: False
 #   edges: True
 
-cl_capable_of:
-  adapter:
-    module: biocypher_metta.adapters.cell_ontology_adapter
-    cls: CellOntologyAdapter
-    args:
-      ontology: 'cl'
-      label: cl_capable_of
-      type: edge
-      dry_run: False
-  outdir: cell_ontology
-  nodes: False
-  edges: True
+# cl_capable_of:
+#   adapter:
+#     module: biocypher_metta.adapters.cell_ontology_adapter
+#     cls: CellOntologyAdapter
+#     args:
+#       ontology: 'cl'
+#       label: cl_capable_of
+#       type: edge
+#       dry_run: False
+#   outdir: cell_ontology
+#   nodes: False
+#   edges: True
 
-cl_part_of:
-  adapter:
-    module: biocypher_metta.adapters.cell_ontology_adapter
-    cls: CellOntologyAdapter
-    args:
-      ontology: 'cl'
-      label: cl_part_of
-      type: edge
-      dry_run: False
-  outdir: cell_ontology
-  nodes: False
-  edges: True
+# cl_part_of:
+#   adapter:
+#     module: biocypher_metta.adapters.cell_ontology_adapter
+#     cls: CellOntologyAdapter
+#     args:
+#       ontology: 'cl'
+#       label: cl_part_of
+#       type: edge
+#       dry_run: False
+#   outdir: cell_ontology
+#   nodes: False
+#   edges: True
 
 
 # # fabian_tf_snp:
@@ -767,15 +767,15 @@ cl_part_of:
 #   nodes: False
 #   edges: True
 
-# # bgee_gene_expressed_in_anatomical_entity:
-# #   adapter:
-# #     module: biocypher_metta.adapters.bgee_adapter
-# #     cls: BgeeAdapter
-# #     args:
-# #       filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
-# #   outdir: bgee
-# #   nodes: False
-# #   edges: True 
+bgee_gene_expressed_in_anatomical_entity:
+  adapter:
+    module: biocypher_metta.adapters.bgee_adapter
+    cls: BgeeAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
+  outdir: bgee
+  nodes: False
+  edges: True 
 
 # # polyphen2:
 # #   adapter:

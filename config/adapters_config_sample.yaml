@@ -137,19 +137,19 @@
 #   nodes: False
 #   edges: True
 
-go_ontology_terms:
-  adapter:
-    module: biocypher_metta.adapters.gene_ontology_adapter
-    cls: GeneOntologyAdapter
-    args:
-      ontology: 'go'
-      type: node
-      dry_run: True
-      add_description: False
+# go_ontology_terms:
+#   adapter:
+#     module: biocypher_metta.adapters.gene_ontology_adapter
+#     cls: GeneOntologyAdapter
+#     args:
+#       ontology: 'go'
+#       type: node
+#       dry_run: True
+#       add_description: False
 
-  outdir: gene_onotology
-  nodes: True
-  edges: False
+#   outdir: gene_onotology
+#   nodes: True
+#   edges: False
 
 # go_subclass_of:
 #   adapter:
@@ -721,15 +721,15 @@ go_ontology_terms:
 #   nodes: True
 #   edges: False
 
-# bgee_gene_expressed_in_anatomical_entity:
-#   adapter:
-#     module: biocypher_metta.adapters.bgee_adapter
-#     cls: BgeeAdapter
-#     args:
-#       filepath: ./samples/Homo_sapiens_expr_sample.tsv.gz
-#   outdir: bgee
-#   nodes: False
-#   edges: True
+bgee_gene_expressed_in_anatomical_entity:
+  adapter:
+    module: biocypher_metta.adapters.bgee_adapter
+    cls: BgeeAdapter
+    args:
+      filepath: ./samples/Homo_sapiens_expr_sample.tsv.gz
+  outdir: bgee
+  nodes: False
+  edges: True
 
 
 # transcription_factor_binding_site:
