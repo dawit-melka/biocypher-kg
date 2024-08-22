@@ -675,18 +675,18 @@
 #   nodes: False
 #   edges: True
 
-# cl_capable_of:
-#   adapter:
-#     module: biocypher_metta.adapters.cell_ontology_adapter
-#     cls: CellOntologyAdapter
-#     args:
-#       ontology: 'cl'
-#       label: cl_capable_of
-#       type: edge
-#       dry_run: False
-#   outdir: cell_ontology
-#   nodes: False
-#   edges: True
+cl_capable_of:
+  adapter:
+    module: biocypher_metta.adapters.cell_ontology_adapter
+    cls: CellOntologyAdapter
+    args:
+      ontology: 'cl'
+      label: cl_capable_of
+      type: edge
+      dry_run: False
+  outdir: cell_ontology
+  nodes: False
+  edges: True
 
 cl_part_of:
   adapter:
