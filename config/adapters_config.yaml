@@ -166,17 +166,17 @@
 #   edges: True
 
 
-gaf:
-  adapter:
-    module: biocypher_metta.adapters.gaf_adapter
-    cls: GAFAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/go/goa_human.gaf.gz
+# gaf:
+#   adapter:
+#     module: biocypher_metta.adapters.gaf_adapter
+#     cls: GAFAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/go/goa_human.gaf.gz
 
 
-  outdir: gaf
-  nodes: False
-  edges: True
+#   outdir: gaf
+#   nodes: False
+#   edges: True
 
 
 # # # # coexpression:
@@ -278,20 +278,20 @@ gaf:
 # #   nodes: False
 # #   edges: True
 
-# # roadmap_h3_mark:
-# #   adapter:
-# #     module: biocypher_metta.adapters.roadmap_h3_marks_adapter
-# #     cls: RoadMapH3MarkAdapter
-# #     args:
-# #       filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/roadmap/h3_marks
-# #       tissue_to_ontology_id_map: ./aux_files/roadmap_ids_to_ontology.pkl
-# #       dbsnp_rsid_map: None
-# #       chr: chr16
-# #       start: 53000000
-# #       end: 56000000
-# #   outdir: roadmap/h3_mark
-# #   nodes: False
-# #   edges: True
+roadmap_h3_mark:
+  adapter:
+    module: biocypher_metta.adapters.roadmap_h3_marks_adapter
+    cls: RoadMapH3MarkAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/forgedb/roadmap/h3_marks
+      tissue_to_ontology_id_map: ./aux_files/roadmap_ids_to_ontology.pkl
+      dbsnp_rsid_map: None
+      chr: chr16
+      start: 53000000
+      end: 56000000
+  outdir: roadmap/h3_mark
+  nodes: False
+  edges: True
 
 # # roadmap_dhs:
 # #   adapter:

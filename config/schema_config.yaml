@@ -884,6 +884,6 @@ histone modification:
   represented_as: edge
   input_label: histone_modification
   source: snp
-  target: uberon #TODO replace by cell ontology
+  target: ontology_term #TODO replace by cell ontology
   properties:
     modification: str
