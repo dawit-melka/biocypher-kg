@@ -768,33 +768,33 @@
 #   nodes: False
 #   edges: True
 
-# brenda_tissue_ontology:
-#   adapter:
-#     module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
-#     cls: BrendaTissueOntologyAdapter
-#     args:
-#       ontology: "bto"
-#       type: node
-#       dry_run: False
-#       add_description: False
-#       cache_dir: ./ontology_cache
-#   outdir: brenda_tissue_ontology
-#   nodes: True
-#   edges: False
+brenda_tissue_ontology:
+  adapter:
+    module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
+    cls: BrendaTissueOntologyAdapter
+    args:
+      ontology: "bto"
+      type: node
+      dry_run: False
+      add_description: False
+      cache_dir: ./ontology_cache
+  outdir: brenda_tissue_ontology
+  nodes: True
+  edges: False
 
-# bto_subclass_of:
-#   adapter:
-#     module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
-#     cls: BrendaTissueOntologyAdapter
-#     args:
-#       ontology: "bto"
-#       label: bto_subclass_of
-#       type: edge
-#       dry_run: False
-#       cache_dir: ./ontology_cache
-#   outdir: brenda_tissue_ontology
-#   nodes: False
-#   edges: True
+bto_subclass_of:
+  adapter:
+    module: biocypher_metta.adapters.brenda_tissue_ontology_adapter
+    cls: BrendaTissueOntologyAdapter
+    args:
+      ontology: "bto"
+      label: bto_subclass_of
+      type: edge
+      dry_run: False
+      cache_dir: ./ontology_cache
+  outdir: brenda_tissue_ontology
+  nodes: False
+  edges: True
 
 # polyphen2:
 #   adapter:
@@ -807,70 +807,70 @@
 #   nodes: True
 #   edges: False
 
-bgee_gene_expressed_in_anatomical_entity:
-  adapter:
-    module: biocypher_metta.adapters.bgee_adapter
-    cls: BgeeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
-  outdir: bgee
-  nodes: False
-  edges: True
+# bgee_gene_expressed_in_anatomical_entity:
+#   adapter:
+#     module: biocypher_metta.adapters.bgee_adapter
+#     cls: BgeeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
+#   outdir: bgee
+#   nodes: False
+#   edges: True
 
-transcription_factor_binding_site:
-  adapter:
-    module: biocypher_metta.adapters.tfbs_adapter
-    cls: TfbsAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
-      hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
-      label: tfbs
-  outdir: tfbs
-  nodes: True
-  edges: False
+# transcription_factor_binding_site:
+#   adapter:
+#     module: biocypher_metta.adapters.tfbs_adapter
+#     cls: TfbsAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
+#       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
+#       label: tfbs
+#   outdir: tfbs
+#   nodes: True
+#   edges: False
 
-gene_tfbs_association:
-  adapter:
-    module: biocypher_metta.adapters.tfbs_adapter
-    cls: TfbsAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
-      hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
-      label: gene_tfbs
-  outdir: tfbs
-  nodes: False
-  edges: True
+# gene_tfbs_association:
+#   adapter:
+#     module: biocypher_metta.adapters.tfbs_adapter
+#     cls: TfbsAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/tfbs/encRegTfbsClustered.txt.gz
+#       hgnc_to_ensembl: ./aux_files/hgnc_to_ensembl.pkl
+#       label: gene_tfbs
+#   outdir: tfbs
+#   nodes: False
+#   edges: True
 
-snp_to_upstream_gene:
-  adapter:
-    module: biocypher_metta.adapters.gwas_adapter
-    cls: GWASAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
-      label: snp_upstream_gene
-  outdir: gwas/upstream
-  nodes: False
-  edges: True
+# snp_to_upstream_gene:
+#   adapter:
+#     module: biocypher_metta.adapters.gwas_adapter
+#     cls: GWASAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
+#       label: snp_upstream_gene
+#   outdir: gwas/upstream
+#   nodes: False
+#   edges: True
 
-snp_to_downstream_gene:
-  adapter:
-    module: biocypher_metta.adapters.gwas_adapter
-    cls: GWASAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
-      label: snp_downstream_gene
-  outdir: gwas/downstream
-  nodes: False
-  edges: True
+# snp_to_downstream_gene:
+#   adapter:
+#     module: biocypher_metta.adapters.gwas_adapter
+#     cls: GWASAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
+#       label: snp_downstream_gene
+#   outdir: gwas/downstream
+#   nodes: False
+#   edges: True
 
-snp_to_in_gene:
-  adapter:
-    module: biocypher_metta.adapters.gwas_adapter
-    cls: GWASAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
-      label: snp_in_gene
-  outdir: gwas/ingene
-  nodes: False
-  edges: True
+# snp_to_in_gene:
+#   adapter:
+#     module: biocypher_metta.adapters.gwas_adapter
+#     cls: GWASAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
+#       label: snp_in_gene
+#   outdir: gwas/ingene
+#   nodes: False
+#   edges: True
 
