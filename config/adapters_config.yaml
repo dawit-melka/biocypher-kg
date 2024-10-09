@@ -471,16 +471,16 @@ refseq_closest_gene:
 #   nodes: True
 #   edges: False
 
-# transcript_includes_exon:
-#   adapter:
-#     module: biocypher_metta.adapters.gencode_exon_adapter
-#     cls: GencodeExonAdapter
-#     args:
-#       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
-#       label: includes
-#   outdir: gencode/exon
-#   nodes: False
-#   edges: True
+transcript_includes_exon:
+  adapter:
+    module: biocypher_metta.adapters.gencode_exon_adapter
+    cls: GencodeExonAdapter
+    args:
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
+      label: includes
+  outdir: gencode/exon
+  nodes: False
+  edges: True
 
 
 # rna_central_non_coding_rna:
@@ -943,15 +943,15 @@ bto_subclass_of:
 # #   nodes: True
 # #   edges: False
 
-bgee_gene_expressed_in_anatomical_entity:
-  adapter:
-    module: biocypher_metta.adapters.bgee_adapter
-    cls: BgeeAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
-  outdir: bgee
-  nodes: False
-  edges: True
+# bgee_gene_expressed_in_anatomical_entity:
+#   adapter:
+#     module: biocypher_metta.adapters.bgee_adapter
+#     cls: BgeeAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/bgee/Homo_sapiens_expr_simple_all_conditions.tsv.gz
+#   outdir: bgee
+#   nodes: False
+#   edges: True
 
 transcription_factor_binding_site:
   adapter:
