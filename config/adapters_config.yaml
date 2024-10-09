@@ -442,6 +442,7 @@ transcript_includes_exon:
       label: includes
   outdir: gencode/exon
   nodes: False
+  edges: True
 
 
 rna_central_non_coding_rna:
