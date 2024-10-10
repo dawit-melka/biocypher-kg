@@ -42,7 +42,7 @@ class FabianAdapter(Adapter):
                 tf = data[FabianAdapter.INDEX['tf']]
                 tf_ensembl = self.hgnc_to_ensembl_map.get(tf)
                 if variant_rsid == None:
-                    logger.warning(f"Couldn't find rsid for variant {variant_info}")
+                    # logger.warning(f"Couldn't find rsid for variant {variant_info}")
                     continue
                 if tf_ensembl == None:
                     continue

@@ -59,8 +59,8 @@ class RefSeqClosestGeneAdapter(Adapter):
                             yield source_id, target_id, self.label, props
 
                         except Exception as e:
-                            logger.error(f"error while parsing row: {row}, error: {e} skipping...")
+                            # logger.error(f"error while parsing row: {row}, error: {e} skipping...")
                             continue
                 except KeyError as e:
-                    logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
+                    # logger.error(f"rsid {rsid} not found in dbsnp_rsid_map, skipping...")
                     continue

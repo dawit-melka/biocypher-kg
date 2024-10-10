@@ -149,7 +149,6 @@ class GencodeAdapter(Adapter):
                         _source = transcript_key
                         _target = gene_key
                         yield _source, _target, self.label, _props
-                except Exception as e:
+                except:
                     print(
-                        f'Failed to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
-                    print(f'Error: {str(e)}')
+                        f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')

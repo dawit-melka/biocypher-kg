@@ -54,7 +54,7 @@ class RoadMapChromatinStateAdapter(Adapter):
                         if check_genomic_location(self.chr, self.start, self.end, chr, pos, pos):
                             _props = {}
                             if biological_context == None:
-                                print(f"{cell_id} not found in ontology map skipping...")
+                                # print(f"{cell_id} not found in ontology map skipping...")
                                 continue
                             
                             _source = _id
@@ -67,5 +67,5 @@ class RoadMapChromatinStateAdapter(Adapter):
                             yield _source, _target, self.label, _props
 
                     except Exception as e:
-                        print(f"error while parsing row: {row}, error: {e} skipping...")
+                        # print(f"error while parsing row: {row}, error: {e} skipping...")
                         continue

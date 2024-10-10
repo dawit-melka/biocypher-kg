@@ -183,7 +183,7 @@ class OntologyAdapter(Adapter):
                 else:
                     self.version = "unknown"
         except Exception as e:
-            print(f"Error extracting version information: {e}")
+            # print(f"Error extracting version information: {e}")
             self.version = "unknown"
 
         # Ensure the version is stored without the 'v' prefix
@@ -351,21 +351,21 @@ class OntologyAdapter(Adapter):
                     if predicate == OntologyAdapter.DB_XREF:
                         if to_node.__class__ == rdflib.term.Literal:
                             if str(to_node) == str(from_node):
-                                print('Skipping self xref for: ' + from_node_key)
+                                # print('Skipping self xref for: ' + from_node_key)
                                 continue
 
                             # only accepting IDs in the form <ontology>:<ontology_id>
                             if len(str(to_node).split(':')) != 2:
-                                print('Unsupported format for xref: ' + str(to_node))
+                                # print('Unsupported format for xref: ' + str(to_node))
                                 continue
 
                             to_node_key = str(to_node).replace(':', '_')
 
                             if from_node_key == to_node_key:
-                                print('Skipping self xref for: ' + from_node_key)
+                                # print('Skipping self xref for: ' + from_node_key)
                                 continue
                         else:
-                            print('Ignoring non-literal xref: {}'.format(str(to_node)))
+                            # print('Ignoring non-literal xref: {}'.format(str(to_node)))
                             continue
 
                     predicate_name = self.predicate_name(predicate)
