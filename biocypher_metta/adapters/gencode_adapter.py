@@ -92,8 +92,9 @@ class GencodeAdapter(Adapter):
                                     props['source_url'] = self.source_url
                             yield transcript_key, self.label, props
                 except:
-                    print(
-                        f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                    # print(
+                    #     f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                    continue
 
     def get_edges(self):
         with gzip.open(self.filepath, 'rt') as input:
@@ -130,5 +131,6 @@ class GencodeAdapter(Adapter):
                         _target = gene_key
                         yield _source, _target, self.label, _props
                 except:
-                    print(
-                        f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                    # print(
+                    #     f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                    continue

@@ -83,5 +83,6 @@ class GWASAdapter(Adapter):
 
                         yield _source, _target, self.label, _props
                 except Exception as e:
-                    print(row)
-                    print(e)
+                    # print(row)
+                    # print(e)
+                    continue

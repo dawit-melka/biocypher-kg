@@ -123,5 +123,6 @@ class GencodeGeneAdapter(Adapter):
 
                             yield id, self.label, props
                     except:
-                        print(
-                            f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                        # print(
+                        #     f'fail to process for label to load: {self.label}, type to load: {self.type}, data: {line}')
+                        continue

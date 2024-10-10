@@ -59,7 +59,7 @@ class RoadMapH3MarkAdapter(Adapter):
                             _target = biological_context
                             _props = {}
                             if biological_context == None:
-                                print(f"{cell_id} not found in ontology map skipping...")
+                                # print(f"{cell_id} not found in ontology map skipping...")
                                 continue
 
                             if self.write_properties:
@@ -71,5 +71,5 @@ class RoadMapH3MarkAdapter(Adapter):
                             yield _source, _target, self.label, _props
 
                     except Exception as e:
-                        print(f"error while parsing row: {row}, error: {e} skipping...")
+                        # print(f"error while parsing row: {row}, error: {e} skipping...")
                         continue
