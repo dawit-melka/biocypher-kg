@@ -979,7 +979,7 @@ snp_to_upstream_gene:
     module: biocypher_metta.adapters.gwas_adapter
     cls: GWASAdapter
     args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/snp_and_gene/gwas-catalog-associations_ontology-annotated.csv.gz
+      filepath: /mnt/hdd_2/abdu/biocypher_data/gwas/gwas-catalog-associations_ontology-annotated.tsv
       label: snp_upstream_gene
   outdir: gwas/upstream
   nodes: False
