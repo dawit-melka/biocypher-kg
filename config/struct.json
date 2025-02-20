@@ -1,0 +1,299 @@
+{
+    "vertices": [
+        {
+            "label": "super_enhancer",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/dbsuper/nodes_super_enhancer.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "cl",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/cell_ontology/nodes_cl.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "go",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/gene_ontology/nodes_go.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "pathway",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/reactome/nodes_pathway.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "uberon",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/uberon/nodes_uberon.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "non_coding_rna",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/rna_central/nodes_non_coding_rna.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "snp",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/dbsnp/nodes_snp.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "protein",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/uniprot/nodes_protein.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "tfbs",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/tfbs/nodes_tfbs.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "enhancer",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/enhancer_atlas/nodes_enhancer.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "gene",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/gencode/gene/nodes_gene.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "exon",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/gencode/exon/nodes_exon.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "transcript",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/gencode/transcript/nodes_transcript.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "enhancer",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/peregrine/nodes_enhancer.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "efo",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/experimental_factor_ontology/nodes_efo.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "bto",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/brenda_tissue_ontology/nodes_bto.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "promoter",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/epd/nodes_promoter.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "clo",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/cell_line_ontology/nodes_clo.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "tad",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/tadmap/nodes_tad.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        },
+        {
+            "label": "snp",
+            "input": {
+                "type": "file",
+                "path": "example/files/neo4j_out_v3/cadd/nodes_snp.csv",
+                "format": "CSV",
+                "delimiter": "|",
+                "list_format": {
+                    "elem_delimiter": ","
+                }
+            },
+            "ignored": ["label"],
+            "null_values": [""]
+        }
+
+    ]
+}
