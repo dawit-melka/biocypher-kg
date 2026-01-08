@@ -8,6 +8,7 @@ import re
 from biocypher_metta import BaseWriter
 
 class PrologWriter(BaseWriter):
+    STV = "[stv, 1.0, 0.99]"
 
     def __init__(self, schema_config, biocypher_config,
                  output_dir):
@@ -98,7 +99,7 @@ class PrologWriter(BaseWriter):
             label = label.split(".")[1]
         label = label.lower()
         id = self.normalize_text(id.lower())
-        def_out = f"{self.normalize_text(label)}({id})"
+        def_out = f"{self.normalize_text(label)}({id}, {STV})"
         return self.write_property(def_out, properties)
 
     def write_edge(self, edge):
@@ -167,7 +168,7 @@ class PrologWriter(BaseWriter):
         target_id_processed = self.normalize_text(target_id_processed)
         label_to_use = self.normalize_text(label_to_use)
         
-        def_out = f"{label_to_use}({source_type}({source_id_processed}), {target_type}({target_id_processed}))"
+        def_out = f"{label_to_use}({source_type}({source_id_processed}), {target_type}({target_id_processed}), {STV})"
         return self.write_property(def_out, properties)
 
 
