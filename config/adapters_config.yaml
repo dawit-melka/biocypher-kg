@@ -14,7 +14,7 @@ gencode_gene:
 gencode_transcripts:
   adapter:
     module: biocypher_metta.adapters.gencode_transcript_adapter
-    cls: GencodeAdapter
+    cls: GencodeTranscriptAdapter
     args:
       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
       type: transcript
@@ -27,7 +27,7 @@ gencode_transcripts:
 transcribes_to:
   adapter:
     module: biocypher_metta.adapters.gencode_transcript_adapter
-    cls: GencodeAdapter
+    cls: GencodeTranscripAdapter
     args:
       filepath: /mnt/hdd_2/abdu/biocypher_data/gencode/gencode.annotation.gtf.gz
       type: transcribes to
@@ -706,16 +706,19 @@ rna_central_non_coding_rna_cellular_component:
   nodes: False
   edges: True
 
-dgv_variant:
-  adapter:
-    module: biocypher_metta.adapters.dgv_variant_adapter
-    cls: DGVVariantAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/dgv/GRCh38_hg38_variants_2020-02-25.txt.gz
-      label: structural_variant
-  outdir: dgv
-  nodes: True
-  edges: False
+
+## Orphan Node with no edge
+
+# dgv_variant:
+#   adapter:
+#     module: biocypher_metta.adapters.dgv_variant_adapter
+#     cls: DGVVariantAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/dgv/GRCh38_hg38_variants_2020-02-25.txt.gz
+#       label: structural_variant
+#   outdir: dgv
+#   nodes: True
+#   edges: False
 
 epd_promoter:
   adapter:
@@ -744,16 +747,19 @@ epd_promoter_regulates_gene:
   nodes: False
   edges: True
 
-dbvar_variant:
-  adapter:
-    module: biocypher_metta.adapters.dbvar_adapter
-    cls: DBVarVariantAdapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/dbvar/GRCh38.variant_call.all.vcf.gz
-      label: structural_variant
-  outdir: dbvar
-  nodes: True
-  edges: False
+
+## Orphan Node with no edge
+
+# dbvar_variant:
+#   adapter:
+#     module: biocypher_metta.adapters.dbvar_adapter
+#     cls: DBVarVariantAdapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/dbvar/GRCh38.variant_call.all.vcf.gz
+#       label: structural_variant
+#   outdir: dbvar
+#   nodes: True
+#   edges: False
 
 peregrine_enhancer:
   adapter:
@@ -1090,16 +1096,18 @@ chebi_chebi_subclass_of:
   nodes: False
   edges: True
 
-polyphen2:
-  adapter:
-    module: biocypher_metta.adapters.polyphen2_adapter
-    cls: PolyPhen2Adapter
-    args:
-      filepath: /mnt/hdd_2/abdu/biocypher_data/polyphen2/dbNsfpPolyPhen2.bed.gz
-      label: polyphen2_variant
-  outdir: polyphen-2
-  nodes: True
-  edges: False
+## Orphan Node with no edge
+
+# polyphen2:
+#   adapter:
+#     module: biocypher_metta.adapters.polyphen2_adapter
+#     cls: PolyPhen2Adapter
+#     args:
+#       filepath: /mnt/hdd_2/abdu/biocypher_data/polyphen2/dbNsfpPolyPhen2.bed.gz
+#       label: polyphen2_variant
+#   outdir: polyphen-2
+#   nodes: True
+#   edges: False
 
 bgee_gene_expressed_in_anatomical_entity:
   adapter:
@@ -1339,6 +1347,7 @@ uniprot_dbxref_bgee_gene:
       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
       label: protein_has_xref_gene
       dbxref: BGEE
+      taxon_id: 9606        
   outdir: uniprot/protein_has_xref_gene
   nodes: False
   edges: True
@@ -1351,6 +1360,7 @@ uniprot_dbxref_ensembl_gene:
       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
       label: protein_has_xref_gene
       dbxref: ENSEMBL
+      taxon_id: 9606        
   outdir: uniprot/protein_has_xref_gene
   nodes: False
   edges: True
@@ -1363,6 +1373,7 @@ uniprot_dbxref_ensembl_transcript:
       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
       label: protein_has_xref_transcript
       dbxref: ENSEMBL
+      taxon_id: 9606        
   outdir: uniprot/protein_has_xref_transcript
   nodes: False
   edges: True
@@ -1375,6 +1386,7 @@ uniprot_dbxref_ensembl_protein:
       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
       label: protein_has_xref_protein
       dbxref: ENSEMBL
+      taxon_id: 9606        
   outdir: uniprot/protein_has_xref_protein
   nodes: False
   edges: True
@@ -1387,6 +1399,7 @@ uniprot_dbxref_string_protein:
       filepath: /mnt/hdd_2/abdu/biocypher_data/uniprot/uniprot_sprot_human.dat.gz
       label: protein_has_xref_protein
       dbxref: STRING
+      taxon_id: 9606        
   outdir: uniprot/has_xref_protein
   nodes: False
   edges: True
@@ -1400,6 +1413,7 @@ uniprot_dbxref_biological_process:
       label: protein_has_xref_biological_process
       dbxref: GO
       mapping_file: ./aux_files/go_subontology_mapping.pkl
+      taxon_id: 9606        
   outdir: uniprot/has_xref_biological_process
   nodes: False
   edges: True
@@ -1413,6 +1427,7 @@ uniprot_dbxref_cellular_component:
       label: protein_has_xref_cellular_component
       dbxref: GO
       mapping_file: ./aux_files/go_subontology_mapping.pkl
+      taxon_id: 9606        
   outdir: uniprot/has_xref_cellular_component
   nodes: False
   edges: True
@@ -1426,6 +1441,7 @@ uniprot_dbxref_molecular_function:
       label: protein_has_xref_molecular_function
       dbxref: GO
       mapping_file: ./aux_files/go_subontology_mapping.pkl
+      taxon_id: 9606        
   outdir: uniprot/has_xref_molecular_function
   nodes: False
   edges: True
