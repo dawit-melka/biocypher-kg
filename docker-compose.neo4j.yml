@@ -1,0 +1,44 @@
+
+version: "3.9"
+
+services:
+  neo4j_bio_atomspace:
+    image: neo4j:5.21
+    container_name: neo4j_bio_atomspace
+    restart: always
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+    environment:
+      NEO4J_AUTH: "neo4j/atomspace123"
+      NEO4J_dbms_security_auth__enabled: "true"
+
+      # Enable APOC
+      NEO4JLABS_PLUGINS: '["apoc"]'
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+      NEO4J_dbms_security_procedures_allowlist: "apoc.*"
+
+      # Allow loading files from import directory
+      NEO4J_dbms_directories_import: "/import"
+
+      # Performance tuning
+      NEO4J_dbms_memory_pagecache_size: "4G"
+      NEO4J_dbms_memory_heap_initial__size: "2G"
+      NEO4J_dbms_memory_heap_max__size: "4G"
+
+    volumes:
+      # Your local dataset CSVs go here
+      - /:/import
+
+      # Persistent database storage
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_plugins:/plugins
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_plugins:
