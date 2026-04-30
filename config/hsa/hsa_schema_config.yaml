@@ -1070,7 +1070,30 @@ gene to gene coexpression association:
     knowledge_level: "knowledge_assertion"
     agent_type: "manual_agent"
   properties:
-    score:  
+    score:
+      type: float
+      biolink: has_quantitative_value
+
+protein to protein coexpression association:
+  description: >-
+    Indicates that two proteins are co-expressed,
+    generally under the same conditions, as measured
+    at the protein/transcript level (e.g. STRING coexpression channel).
+  is_a: expression
+  biolink_predicate: "biolink:coexpressed_with"
+  inherit_properties: true
+  represented_as: edge
+  input_label: protein_coexpressed_with
+  output_label: coexpressed_with
+  source: protein
+  target: protein
+  kgx_properties:
+    subject_category: "biolink:Protein"
+    object_category: "biolink:Protein"
+    knowledge_level: "knowledge_assertion"
+    agent_type: "automated_agent"
+  properties:
+    coexpression_score:
       type: float
       biolink: has_quantitative_value
 
