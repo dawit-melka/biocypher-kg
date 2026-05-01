@@ -416,8 +416,9 @@ def process_adapters(
             logger.info(f"Checkpoint updated after adapter: {adapter_name}")
 
     if empty_output_adapters:
+        empty_adapter_count = len({name for name, _ in empty_output_adapters})
         logger.warning(
-            f"{len(empty_output_adapters)} adapter(s) produced empty output:"
+            f"{empty_adapter_count} adapter(s) produced empty output:"
         )
         for name, output_type in empty_output_adapters:
             logger.warning(f"  - {name} ({output_type}: 0)")
