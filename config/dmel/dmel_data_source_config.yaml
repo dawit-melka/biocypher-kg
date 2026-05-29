@@ -27,7 +27,7 @@ flybase:
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/dmel_gene_sequence_ontology_annotations_fb_2026_01.tsv.gz
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/dmel_unique_protein_isoforms_fb_2026_01.tsv.gz
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/fbgn_fbtr_fbpp_expanded_fb_2026_01.tsv.gz
-    # - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/FlyCellAtlas_slimmed_gene_expression_fb_2026_01.tsv.gz  nao existe!!!!!!!!!!!!!!
+    # - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/FlyCellAtlas_slimmed_gene_expression_fb_2026_01.tsv.gz 
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/gene_genetic_interactions_fb_2026_01.tsv.gz
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/gene_group_data_fb_2026_01.tsv.gz    
     - https://s3ftp.flybase.org/releases/current/precomputed_files/genes/gene_groups_HGNC_fb_2026_01.tsv.gz
@@ -78,7 +78,6 @@ tflink:
 string:
   name: STRING PPI
   url: https://stringdb-downloads.org/download/protein.links.v12.0/7227.protein.links.v12.0.txt.gz
-
 
 epd:
   name: Eukaryotic Promoter Database
