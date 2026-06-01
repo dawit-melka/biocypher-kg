@@ -24,19 +24,23 @@ coxpressdb:
 #   name: EnhancerAtlas
 #   url: http://www.enhanceratlas.org/data/download/enhancer_atlas_2.0/9606_all_tissues.bed   
 
-gaf:
-  name: GO Annotation File (GAF) from GO (WormBase-wb)
-  url: http://current.geneontology.org/annotations/wb.gaf.gz
-
 ensembl:
   name: Ensembl Assembly 235.v62
   url: 
     - https://ftp.ebi.ac.uk/ensemblgenomes/pub/metazoa/current/gtf/caenorhabditis_elegans/Caenorhabditis_elegans.WBcel235.62.gtf.gz
     - https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Invertebrates/Caenorhabditis_elegans.gene_info.gz
 
-uniprot:
-  name: UniProtKB/Swiss-Prot
-  url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_invertebrates.dat.gz
+epd:
+  name: Eukaryotic Promoter Database
+  url:
+    # - https://epd.epfl.ch/EPD/get_promoter_seq?db=hg38&format=bed&nb_seq=0
+    # - https://epd.expasy.org/ftp/epdnew/D_melanogaster/current/
+    - https://epd.expasy.org/ftp/epdnew/C_elegans/current/Ce_EPDnew.bed
+
+
+gaf:
+  name: GO Annotation File (GAF) from GO (WormBase-wb)
+  url: http://current.geneontology.org/annotations/wb.gaf.gz
 
 reactome:
   name: Reactome
@@ -56,11 +60,6 @@ rna_central:
     bed: https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/genome_coordinates/bed/caenorhabditis_elegans.WBcel235.bed.gz
     rfam: https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/rfam/rfam_annotations.tsv.gz
 
-tflink:
-  name: TFLink
-  url: https://cdn.netbiol.org/tflink/download_files/TFLink_Caenorhabditis_elegans_interactions_All_simpleFormat_v1.0.tsv
-
-
 string:
   name: STRING PPI
   url:
@@ -68,11 +67,12 @@ string:
     - https://stringdb-downloads.org/download/protein.links.detailed.v12.0/6239.protein.links.detailed.v12.0.txt.gz  # detailed version
 
 
-epd:
-  name: Eukaryotic Promoter Database
-  url:
-    # - https://epd.epfl.ch/EPD/get_promoter_seq?db=hg38&format=bed&nb_seq=0
-    # - https://epd.expasy.org/ftp/epdnew/D_melanogaster/current/
-    - https://epd.expasy.org/ftp/epdnew/C_elegans/current/Ce_EPDnew.bed
+tflink:
+  name: TFLink
+  url: https://cdn.netbiol.org/tflink/download_files/TFLink_Caenorhabditis_elegans_interactions_All_simpleFormat_v1.0.tsv
 
+
+uniprot:
+  name: UniProtKB/Swiss-Prot
+  url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_invertebrates.dat.gz
 

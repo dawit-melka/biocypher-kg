@@ -24,11 +24,6 @@ coxpressdb:
 #   name: EnhancerAtlas
 #   url: http://www.enhanceratlas.org/data/download/enhancer_atlas_2.0/10116_all_tissues.bed   
     
-gaf:
-  name: GO Annotation File (GAF) from GO (RGD)
-  extract: false
-  url: http://current.geneontology.org/annotations/rgd.gaf.gz
-
 ensembl:
   name: Ensembl Assembly 8.v115
   extract: false
@@ -36,11 +31,18 @@ ensembl:
     - https://ftp.ensembl.org/pub/current/gtf/rattus_norvegicus/Rattus_norvegicus.GRCr8.115.gtf.gz
     - https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/Rattus_norvegicus.gene_info.gz
 
-uniprot:
-  name: UniProtKB/Swiss-Prot
+epd:
+  name: Eukaryotic Promoter Database
+  compress: gzip
+  url:
+    # - https://epd.epfl.ch/EPD/get_promoter_seq?db=hg38&format=bed&nb_seq=0  # this is not working
+    # - https://epd.expasy.org/ftp/epdnew/D_melanogaster/current/ 
+    - https://epd.expasy.org/ftp/epdnew/R_norvegicus/current/Rn_EPDnew.bed
+gaf:
+  name: GO Annotation File (GAF) from GO (RGD)
   extract: false
-  url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_rodents.dat.gz
-  
+  url: http://current.geneontology.org/annotations/rgd.gaf.gz
+
 reactome:
   name: Reactome
   url:
@@ -60,11 +62,6 @@ rna_central:
     bed: https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/genome_coordinates/bed/rattus_norvegicus.mRatBN7.2.bed.gz
     rfam: https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/go_annotations/rnacentral_rfam_annotations.tsv.gz
 
-tflink:
-  name: TFLink
-  compress: gzip
-  url: https://cdn.netbiol.org/tflink/download_files/TFLink_Rattus_norvegicus_interactions_All_simpleFormat_v1.0.tsv
-
 string:
   name: STRING PPI
   extract: false
@@ -73,10 +70,13 @@ string:
     - https://stringdb-downloads.org/download/protein.links.detailed.v12.0/10116.protein.links.detailed.v12.0.txt.gz
 
 
-epd:
-  name: Eukaryotic Promoter Database
+tflink:
+  name: TFLink
   compress: gzip
-  url:
-    # - https://epd.epfl.ch/EPD/get_promoter_seq?db=hg38&format=bed&nb_seq=0  # this is not working
-    # - https://epd.expasy.org/ftp/epdnew/D_melanogaster/current/ 
-    - https://epd.expasy.org/ftp/epdnew/R_norvegicus/current/Rn_EPDnew.bed
+  url: https://cdn.netbiol.org/tflink/download_files/TFLink_Rattus_norvegicus_interactions_All_simpleFormat_v1.0.tsv
+
+uniprot:
+  name: UniProtKB/Swiss-Prot
+  extract: false
+  url: https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/taxonomic_divisions/uniprot_sprot_rodents.dat.gz
+  

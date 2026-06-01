@@ -1488,7 +1488,7 @@ snp_to_upstream_gene:
     module: biocypher_metta.adapters.hsa.gwas_adapter
     cls: GWASAdapter
     args:
-      filepath: gwas/gwas-catalog-associations_ontology-annotated.tsv
+      filepath: gwas/gwas-catalog-download-associations-v1.0-full.tsv
       label: snp_upstream_gene
   outdir: gwas/upstream
   nodes: False
@@ -1499,7 +1499,7 @@ snp_to_downstream_gene:
     module: biocypher_metta.adapters.hsa.gwas_adapter
     cls: GWASAdapter
     args:
-      filepath: gwas/gwas-catalog-associations_ontology-annotated.tsv
+      filepath: gwas/gwas-catalog-download-associations-v1.0-full.tsv
       label: snp_downstream_gene
   outdir: gwas/downstream
   nodes: False
@@ -1510,7 +1510,7 @@ snp_to_in_gene:
     module: biocypher_metta.adapters.hsa.gwas_adapter
     cls: GWASAdapter
     args:
-      filepath: gwas/gwas-catalog-associations_ontology-annotated.tsv
+      filepath: gwas/gwas-catalog-download-associations-v1.0-full.tsv
       label: snp_in_gene
   outdir: gwas/ingene
   nodes: False
