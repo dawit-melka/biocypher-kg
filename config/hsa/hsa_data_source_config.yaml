@@ -48,7 +48,7 @@ cCRE:
       files:
         - V4-hg38.Gene-Links.eQTLs.txt
 
-coxpresdb:
+coxpressdb:
   name: Coxpress DB
   version: {strategy: url_regex, pattern: '\.(v[\d-]+)\.', vtype: other}
   extract: true

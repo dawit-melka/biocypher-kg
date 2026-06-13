@@ -110,7 +110,10 @@ class VersionGetter(ABC):
         base = VersionInfo(
             source_id=self.source_id,
             name=self.source_config.get("name"),
-            url=self.source_config.get("url"),
+            # Keep the declared `url` structure when present; otherwise fall back to the
+            # resolved URLs so sources that use bed_url / zip_extract / directories still
+            # record a meaningful declared_url in the manifest.
+            url=self.source_config.get("url") or (self.urls or None),
             strategy=self.strategy,
             vtype=self.spec.get("vtype", "other"),
         )
