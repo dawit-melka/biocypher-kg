@@ -1,0 +1,94 @@
+site_name: BioCypher-KG
+site_description: Knowledge graph pipeline for multi-species biological data
+site_url: https://rejuve-bio.github.io/biocypher-kg/
+repo_url: https://github.com/rejuve-bio/biocypher-kg
+repo_name: rejuve-bio/biocypher-kg
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: false
+
+validation:
+  links:
+    not_found: info
+    absolute_links: info
+    unrecognized_links: info
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  generator: false
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - System Overview: architecture/system-overview.md
+    - Architecture: architecture/architecture.md
+    - Data Flow: architecture/data-flow.md
+    - Component Diagrams: architecture/component-diagrams.md
+  - Development:
+    - Local Development: development/local-development.md
+    - Project Structure: development/project-structure.md
+    - Coding Standards: development/coding-standards.md
+    - Testing: development/testing.md
+  - Operations:
+    - Deployment: operations/deployment.md
+    - Configuration: operations/configuration.md
+    - Monitoring: operations/monitoring.md
+    - Troubleshooting: operations/troubleshooting.md
+  - API:
+    - Endpoints: api/endpoints.md
+    - Schemas: api/schemas.md
+  - Knowledge Graph:
+    - Data Model: knowledge-graph/data-model.md
+    - Adapter Catalog: knowledge-graph/adapter-catalog.md
+    - Dataset Versioning: knowledge-graph/dataset-versioning.md
+    - Ontology: knowledge-graph/ontology.md
+    - Ingestion Pipeline: knowledge-graph/ingestion-pipeline.md
+    - Graph Construction: knowledge-graph/graph-construction.md
+    - Writers: knowledge-graph/writers.md
+  - Reference:
+    - Glossary: reference/glossary.md
+    - FAQ: reference/faq.md
