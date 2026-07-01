@@ -174,11 +174,11 @@ classDiagram
 graph TD
     subgraph FastAPI["kg-service FastAPI (port 8000)"]
         MAIN[main.py\nCORS + scheduler\n72h refresh]
-        SR[/api/summary]
-        UR[/api/updates]
-        GIR[/api/graph-info\n/api/graph-info/status]
-        VR[/api/databases/*\n/api/versions/*]
-        DR[/api/databases\n/api/databases/{db_type}/status]
+        SR["/api/summary"]
+        UR["/api/updates"]
+        GIR["/api/graph-info\n/api/graph-info/status"]
+        VR["/api/databases/*\n/api/versions/*"]
+        DR["/api/databases\n/api/databases/{db_type}/status"]
         ROOT["GET /\nGET /health"]
     end
 

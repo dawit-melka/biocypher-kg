@@ -108,7 +108,7 @@ Add it to the schema YAML following the existing pattern, then create or update 
 
 **What are the CURIE prefixes for each entity type?**
 
-See the CURIE prefix column in [data-model.md](../knowledge-graph/data-model.md#node-types--primer-schema). CURIE prefixes can be stripped with `--no-curie` (the default).
+See the CURIE prefix column in [data-model.md](../knowledge-graph/data-model.md#node-types-primer-schema). CURIE prefixes can be stripped with `--no-curie` (the default).
 
 ---
 

@@ -98,25 +98,17 @@ The `CheckpointManager` class in [`checkpoint_manager.py`](../../checkpoint_mana
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Fresh: No checkpoint file exists\n(or first run)
-    
-    Fresh --> Running: Pipeline starts\n(no checkpoint.json yet)
-    
-    Running --> Checkpointed: CheckpointManager.save()\ncalled after each adapter
-    
-    Checkpointed --> Running: Next adapter starts\n(still same run)
-    
-    Checkpointed --> Interrupted: Process killed / crash
-    
-    Interrupted --> Resuming: User runs pipeline again,\ncheckpoint.json detected,\n--resume flag or Y at prompt
-    
-    Interrupted --> Fresh: User chooses --restart\nor N at prompt\n→ checkpoint.json deleted
-    
-    Resuming --> Running: completed_adapters restored,\ncounts restored,\nelapsed_seconds restored
-    
-    Running --> Complete: All adapters finish,\nwriter.finalize() succeeds
-    
-    Complete --> [*]: CheckpointManager.delete()\nremoves checkpoint.json
+    [*] --> Fresh : No checkpoint file (first run)
+
+    Fresh --> Running : Pipeline starts
+    Running --> Checkpointed : CheckpointManager.save() after each adapter
+    Checkpointed --> Running : Next adapter starts (same run)
+    Checkpointed --> Interrupted : Process killed or crashed
+    Interrupted --> Resuming : checkpoint.json detected — resume chosen
+    Interrupted --> Fresh : --restart chosen — checkpoint deleted
+    Resuming --> Running : completed_adapters and counts restored
+    Running --> Complete : All adapters done — writer.finalize() succeeds
+    Complete --> [*] : CheckpointManager.delete() removes checkpoint.json
 ```
 
 ### Checkpoint file schema
@@ -200,7 +192,7 @@ sequenceDiagram
     VM-->>Loader: source name detected from CSV header
 
     alt Hash changed since last load
-        Loader->>Neo4j: DELETE nodes/edges for changed source\n(surgical — only changed datasets)
+        Loader->>Neo4j: DELETE nodes/edges for changed source (surgical)
         Neo4j-->>Loader: deleted
         Loader->>Neo4j: LOAD CSV / neo4j-admin import for changed source
         Neo4j-->>Loader: loaded
@@ -272,7 +264,7 @@ Before any adapter runs, `_check_adapter_file_paths()` validates all declared fi
 ```mermaid
 flowchart TD
     A[Load adapters_dict] --> B[For each adapter entry]
-    B --> C{arg key is a path key?\nfilepath, dirpath, _file, _path...}
+    B --> C{Is arg a path key?}
     C -- No --> B
     C -- Yes --> D{Path.exists?}
     D -- Yes --> B
