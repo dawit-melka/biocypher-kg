@@ -1,7 +1,8 @@
 .PHONY: help setup check-uv run run-interactive run-sample run-direct check-paths \
         download download-direct \
         test clean distclean \
-        neo4j-up neo4j-down neo4j-logs neo4j-status neo4j-load neo4j-load-direct
+        neo4j-up neo4j-down neo4j-logs neo4j-status neo4j-load neo4j-load-direct \
+        docs-serve docs-stop
 
 # Path to the Neo4j env file; override with: make neo4j-up NEO4J_ENV_FILE=my.env
 NEO4J_ENV_FILE ?= docker/neo4j.env
@@ -22,6 +23,10 @@ help:
 	@echo "  make test           - Run tests"
 	@echo "  make clean          - Clean temporary files"
 	@echo "  make distclean      - Full clean including virtual environment"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  make docs-serve     - Serve docs locally (asks for port, runs in background)"
+	@echo "  make docs-stop      - Stop the docs server (asks for port)"
 	@echo ""
 	@echo "Neo4j deployment (configure via $(NEO4J_ENV_FILE)):"
 	@echo "  make neo4j-up           - Start Neo4j Docker container"
@@ -352,6 +357,30 @@ download-direct: check-uv
 		--output-dir "$(OUTPUT_DIR)" \
 		--config-file "$(if $(CONFIG_FILE),$(CONFIG_FILE),./config/hsa/hsa_data_source_config.yaml)" \
 		$(if $(SOURCE),--source "$(SOURCE)",)
+
+# ─── Documentation ───────────────────────────────────────────────────────────
+
+docs-serve:
+	@which mkdocs > /dev/null 2>&1 || { echo "📦 mkdocs not found — installing docs dependencies..."; pip install -q -r docs-requirements.txt; }; \
+	read -p "🌐 Enter port [8000]: " DOCS_PORT; \
+	DOCS_PORT=$${DOCS_PORT:-8000}; \
+	echo "Starting docs server on port $$DOCS_PORT..."; \
+	mkdocs serve --dev-addr 0.0.0.0:$$DOCS_PORT & \
+	echo $$! > .docs-server.pid; \
+	echo ""; \
+	echo "✅ Docs server running at http://localhost:$$DOCS_PORT  (PID $$(cat .docs-server.pid))"; \
+	echo "   Stop with: make docs-stop"
+
+docs-stop:
+	@read -p "🌐 Enter port to stop [8000]: " DOCS_PORT; \
+	DOCS_PORT=$${DOCS_PORT:-8000}; \
+	FOUND=$$(lsof -ti :$$DOCS_PORT 2>/dev/null); \
+	if [ -n "$$FOUND" ]; then \
+		kill $$FOUND && echo "✅ Docs server stopped (port $$DOCS_PORT, PID $$FOUND)"; \
+		rm -f .docs-server.pid; \
+	else \
+		echo "⚠️  No server found on port $$DOCS_PORT"; \
+	fi
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
 
