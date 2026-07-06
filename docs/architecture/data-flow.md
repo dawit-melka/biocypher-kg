@@ -94,7 +94,7 @@ sequenceDiagram
 
 ## Checkpoint state machine
 
-The `CheckpointManager` class in [`checkpoint_manager.py`](../../checkpoint_manager.py) persists state to `<output_dir>/kg_checkpoint.json` after each adapter completes. This enables interrupted runs to resume from the last successfully completed adapter.
+The `CheckpointManager` class in [`checkpoint_manager.py`](https://github.com/rejuve-bio/biocypher-kg/blob/main/checkpoint_manager.py) persists state to `<output_dir>/kg_checkpoint.json` after each adapter completes. This enables interrupted runs to resume from the last successfully completed adapter.
 
 ```mermaid
 stateDiagram-v2
@@ -170,7 +170,7 @@ For the full versioning specification, see [dataset-versioning.md](../knowledge-
 
 ## Neo4j loading sequence
 
-The `Neo4jLoader` in [`kg-service/neo4j_loader.py`](../../kg-service/neo4j_loader.py) supports incremental updates via surgical deletion of changed datasets.
+The `Neo4jLoader` in [`kg-service/neo4j_loader.py`](https://github.com/rejuve-bio/biocypher-kg/blob/main/kg-service/neo4j_loader.py) supports incremental updates via surgical deletion of changed datasets.
 
 ```mermaid
 sequenceDiagram

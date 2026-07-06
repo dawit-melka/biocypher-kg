@@ -3,15 +3,15 @@
 This catalogue lists every data source integrated into the BioCypher-KG pipeline. Use it to check coverage before adding a new source and to understand what biological domains are represented.
 
 **Source files:**
-- [`config/hsa/hsa_data_source_config.yaml`](../../config/hsa/hsa_data_source_config.yaml) — Human source URLs, version strategies, licenses
-- [`config/dmel/dmel_data_source_config.yaml`](../../config/dmel/dmel_data_source_config.yaml) — Drosophila source URLs
-- [`biocypher_metta/adapters/`](../../biocypher_metta/adapters/) — Adapter implementations
+- [`config/hsa/hsa_data_source_config.yaml`](https://github.com/rejuve-bio/biocypher-kg/blob/main/config/hsa/hsa_data_source_config.yaml) — Human source URLs, version strategies, licenses
+- [`config/dmel/dmel_data_source_config.yaml`](https://github.com/rejuve-bio/biocypher-kg/blob/main/config/dmel/dmel_data_source_config.yaml) — Drosophila source URLs
+- [`biocypher_metta/adapters/`](https://github.com/rejuve-bio/biocypher-kg/tree/main/biocypher_metta/adapters/) — Adapter implementations
 
 ---
 
 ## How to add a new data source
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full adapter development guide. In brief:
+See [CONTRIBUTING.md](https://github.com/rejuve-bio/biocypher-kg/blob/main/CONTRIBUTING.md) for the full adapter development guide. In brief:
 
 1. Create a new adapter class in `biocypher_metta/adapters/` (or `hsa/`/`dmel/` for species-specific sources)
 2. Implement `get_nodes()` and/or `get_edges()` following the `Adapter` ABC contract

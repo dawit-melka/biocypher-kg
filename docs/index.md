@@ -75,9 +75,9 @@ These files exist in the repository and should be linked to, not restated:
 
 | File | Content |
 |---|---|
-| [README](../README.md) | Quickstart, make commands, Neo4j deployment |
-| [CONTRIBUTING](../CONTRIBUTING.md) | Adapter development guide, PR workflow |
+| [README](https://github.com/rejuve-bio/biocypher-kg/blob/main/README.md) | Quickstart, make commands, Neo4j deployment |
+| [CONTRIBUTING](https://github.com/rejuve-bio/biocypher-kg/blob/main/CONTRIBUTING.md) | Adapter development guide, PR workflow |
 | [dataset-versioning](knowledge-graph/dataset-versioning.md) | Complete versioning specification (moved from doc/) |
-| [biocypher_metta/processors/README](../biocypher_metta/processors/README.md) | Processor usage and cache files |
-| [schema_generator/README](../schema_generator/README.md) | Schema generation tool |
-| [biocypher_dataset_downloader/versioning/README](../biocypher_dataset_downloader/versioning/README.md) | VersionInfo/VersionGetter contract |
+| [biocypher_metta/processors/README](https://github.com/rejuve-bio/biocypher-kg/blob/main/biocypher_metta/processors/README.md) | Processor usage and cache files |
+| [schema_generator/README](https://github.com/rejuve-bio/biocypher-kg/blob/main/schema_generator/README.md) | Schema generation tool |
+| [biocypher_dataset_downloader/versioning/README](https://github.com/rejuve-bio/biocypher-kg/blob/main/biocypher_dataset_downloader/versioning/README.md) | VersionInfo/VersionGetter contract |
