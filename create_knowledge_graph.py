@@ -31,6 +31,16 @@ import typer
 import yaml
 from biocypher import BioCypher
 from biocypher._logger import logger
+from biocypher_metta.harmonization.pipeline import (
+    HARMONIZATION_DIRNAME,
+    HarmonizationContext,
+    HarmonizationError,
+    adapter_name_of,
+    adapters_with_pending_units,
+    plan_waves,
+    validate_alias_entries,
+)
+from biocypher_metta.harmonization.schema_info import SchemaInfo
 from biocypher_metta.kgx_writer import *
 from biocypher_metta.metta_writer import *
 from biocypher_metta.neo4j_csv_writer import *
@@ -253,8 +263,11 @@ def gather_graph_info(nodes_count, nodes_props, edges_count, schema_dict, output
             }
         )
 
+    # harmonization/ holds build-time shards, the alias registry and reports, not KG data.
+    harmonization_dir = Path(output_dir) / HARMONIZATION_DIRNAME
     total_size = sum(
-        file.stat().st_size for file in Path(output_dir).rglob("*") if file.is_file()
+        file.stat().st_size for file in Path(output_dir).rglob("*")
+        if file.is_file() and harmonization_dir not in file.parents
     )
     total_size_gb = total_size / (1024**3)
     graph_info["data_size"] = f"{total_size_gb:.2f} GB"
@@ -407,6 +420,87 @@ def _strip_taxon_id(items, is_edge: bool):
             yield node_id, label, props
 
 
+def _run_adapter_io(writer, adapter, unit_name, unit_entry, include_taxon_id, harmonization=None):
+    """Write one work unit's nodes and/or edges and return plain counts.
+
+    Shared by the sequential and parallel paths. With entity harmonization, an
+    alias-enabled adapter's nodes pass through the alias wrapper (alias nodes and
+    alias_of edges are written after the adapter's own output) and every edge
+    passes through the endpoint harmonizer once the registry exists.
+    """
+    adapter_name = adapter_name_of(unit_name, unit_entry)
+    outdir = unit_entry["outdir"]
+    out = {
+        "freq_nodes": {}, "props": {}, "freq_edges": {}, "empty": [],
+        "adapter_nodes": 0, "adapter_edges": 0, "alias": None, "harmonization": None,
+    }
+
+    shard = None
+    if unit_entry["nodes"]:
+        if harmonization is not None:
+            shard = harmonization.open_shard(adapter_name, adapter)
+        try:
+            nodes = adapter.get_nodes()
+            if shard is not None:
+                nodes = harmonization.wrap_nodes(nodes, shard, adapter)
+            if not include_taxon_id:
+                nodes = _strip_taxon_id(nodes, is_edge=False)
+            freq, props = writer.write_nodes(nodes, path_prefix=outdir)
+        except BaseException:
+            if shard is not None:
+                shard.abort()
+            raise
+        # Copy now: some writers return live objects reset by their next call.
+        out["freq_nodes"] = dict(freq)
+        out["props"] = {label: set(p) for label, p in props.items()}
+        if not freq:
+            out["empty"].append((unit_name, "nodes"))
+        else:
+            out["adapter_nodes"] = sum(freq.values())
+
+    if unit_entry["edges"]:
+        harmonizer = None
+        if harmonization is not None and unit_entry.get("harmonize_edges", True):
+            harmonizer = harmonization.edge_harmonizer(adapter_name)
+        edges = adapter.get_edges()
+        if harmonizer is not None:
+            edges = harmonizer.wrap(edges)
+        if not include_taxon_id:
+            edges = _strip_taxon_id(edges, is_edge=True)
+        freq = writer.write_edges(edges, path_prefix=outdir)
+        out["freq_edges"] = dict(freq)
+        if not freq:
+            out["empty"].append((unit_name, "edges"))
+        else:
+            out["adapter_edges"] = sum(freq.values())
+        if harmonizer is not None:
+            out["harmonization"] = harmonization.close_harmonizer(adapter_name, harmonizer)
+
+    if shard is not None:
+        try:
+            alias = harmonization.write_alias_outputs(writer, shard, adapter_name, unit_entry, adapter)
+        except BaseException:
+            shard.abort()
+            raise
+        out["alias"] = alias
+        for label, count in alias["node_counts"].items():
+            out["freq_nodes"][label] = out["freq_nodes"].get(label, 0) + count
+        for label, keys in alias["node_props"].items():
+            out["props"][label] = out["props"].get(label, set()) | set(keys)
+        for key, count in alias["edge_counts"].items():
+            out["freq_edges"][key] = out["freq_edges"].get(key, 0) + count
+
+    return out
+
+
+def _alias_log_suffix(io_result):
+    alias = io_result.get("alias")
+    if not alias:
+        return ""
+    summary = alias["summary"]
+    return f", aliases: {summary['alias_nodes']:,} nodes / {summary['alias_of_edges']:,} alias_of edges"
+
+
 _PREFLIGHT_SKIP_ARGS = {"cache_dir"}
 
 
@@ -545,8 +639,8 @@ def _worker_noop():
     return _WORKER_WRITER is not None
 
 
-def _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_id):
-    """Run one adapter in a worker process and return a picklable result dict.
+def _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_id, harmonization=None):
+    """Run one adapter (work unit) in a worker process and return a picklable result dict.
 
     ctr_args (dbSNP maps, write_properties, add_provenance) are injected by the
     main process before submission, mirroring the sequential path.
@@ -562,7 +656,6 @@ def _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_
 
     write_nodes = adapter_entry["nodes"]
     write_edges = adapter_entry["edges"]
-    outdir = adapter_entry["outdir"]
     prov = adapter_entry.get("provenance") or {}
 
     dataset_name = getattr(adapter, "source", None)
@@ -570,50 +663,30 @@ def _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_
     source_url = prov.get("source_url") or getattr(adapter, "source_url", None)
 
     adapter_start = time.time()
-    freq_nodes, props, freq_edges = {}, {}, {}
-    empty = []
-    adapter_nodes = adapter_edges = 0
-
-    if write_nodes:
-        nodes = adapter.get_nodes()
-        if not include_taxon_id:
-            nodes = _strip_taxon_id(nodes, is_edge=False)
-        freq_nodes, props = writer.write_nodes(nodes, path_prefix=outdir)
-        if not freq_nodes:
-            empty.append((adapter_name, "nodes"))
-        else:
-            adapter_nodes = sum(freq_nodes.values())
-
-    if write_edges:
-        edges = adapter.get_edges()
-        if not include_taxon_id:
-            edges = _strip_taxon_id(edges, is_edge=True)
-        freq_edges = writer.write_edges(edges, path_prefix=outdir)
-        if not freq_edges:
-            empty.append((adapter_name, "edges"))
-        else:
-            adapter_edges = sum(freq_edges.values())
+    io = _run_adapter_io(writer, adapter, adapter_name, adapter_entry, include_taxon_id, harmonization)
 
     return {
         "adapter_name": adapter_name,
-        "freq_nodes": dict(freq_nodes),
-        "props": {k: set(v) for k, v in (props or {}).items()},
-        "freq_edges": dict(freq_edges),
+        "freq_nodes": io["freq_nodes"],
+        "props": io["props"],
+        "freq_edges": io["freq_edges"],
         "dataset_name": dataset_name,
         "version": version,
         "source_url": source_url,
         "prov": prov,
         "write_nodes": write_nodes,
         "write_edges": write_edges,
-        "adapter_nodes": adapter_nodes,
-        "adapter_edges": adapter_edges,
-        "empty": empty,
+        "adapter_nodes": io["adapter_nodes"],
+        "adapter_edges": io["adapter_edges"],
+        "empty": io["empty"],
+        "alias": io["alias"],
+        "harmonization": io["harmonization"],
         "elapsed": time.time() - adapter_start,
         "error": None,
     }
 
 
-def _run_adapter_group(group, schema_dict, include_taxon_id):
+def _run_adapter_group(group, schema_dict, include_taxon_id, harmonization=None):
     """Run a group of adapters (sharing one output dir) sequentially in a worker.
 
     Each adapter is guarded independently so a single failure doesn't lose the
@@ -623,7 +696,7 @@ def _run_adapter_group(group, schema_dict, include_taxon_id):
     for adapter_name, adapter_entry in group:
         try:
             results.append(
-                _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_id)
+                _run_single_adapter(adapter_name, adapter_entry, schema_dict, include_taxon_id, harmonization)
             )
         except Exception:
             # Capture the full traceback (not just the exception line) so failures
@@ -722,14 +795,22 @@ def _process_adapters_parallel(
     completed_adapters,
     empty_output_adapters,
     total_start,
+    waves=None,
+    harmonization=None,
 ):
     """Run adapters concurrently across a process pool. Returns the same 7-tuple
-    as process_adapters()."""
-    total_adapters = len(adapters_dict)
-    pending = [name for name in adapters_dict if name not in completed_adapters]
+    as process_adapters().
+
+    ``waves`` (default: one wave of ``adapters_dict``) are run one after another
+    on the same pool; with entity harmonization the alias registry is built
+    between them (see biocypher_metta/harmonization/pipeline.py).
+    """
+    waves = waves if waves is not None else [adapters_dict]
+    total_adapters = sum(len(wave) for wave in waves)
+    pending_by_wave = [[name for name in wave if name not in completed_adapters] for wave in waves]
     adapter_times: dict = {}
 
-    if not pending:
+    if not any(pending_by_wave):
         logger.info("All adapters already completed (from checkpoint).")
         return (
             nodes_count, nodes_props, edges_count, datasets_dict,
@@ -738,54 +819,35 @@ def _process_adapters_parallel(
 
     # Inject runtime ctr_args (dbSNP maps, write/provenance flags), mirroring the
     # sequential path. dbSNP wrappers are picklable and reopen read-only per worker.
-    for name in pending:
-        ctr_args = adapters_dict[name]["adapter"]["args"]
-        if "dbsnp_rsid_map" in ctr_args:
-            ctr_args["dbsnp_rsid_map"] = dbsnp_rsids_dict
-        if "dbsnp_pos_map" in ctr_args:
-            ctr_args["dbsnp_pos_map"] = dbsnp_pos_dict
-        ctr_args["write_properties"] = write_properties
-        ctr_args["add_provenance"] = add_provenance
+    for wave, pending in zip(waves, pending_by_wave):
+        for name in pending:
+            ctr_args = wave[name]["adapter"]["args"]
+            if "dbsnp_rsid_map" in ctr_args:
+                ctr_args["dbsnp_rsid_map"] = dbsnp_rsids_dict
+            if "dbsnp_pos_map" in ctr_args:
+                ctr_args["dbsnp_pos_map"] = dbsnp_pos_dict
+            ctr_args["write_properties"] = write_properties
+            ctr_args["add_provenance"] = add_provenance
 
-    # Coalesce adapters that resolve to the same output file — i.e. same outdir and
-    # same label — into one sequential task, so two workers never rewrite the same
-    # file concurrently (which would corrupt it). Adapters with distinct labels in a
-    # shared outdir write distinct files and stay fully parallel. Adapters without a
-    # declared label get a unique key so they never coalesce. A collision (>1 in a
-    # group) is warned about: it already yields last-writer-wins today.
-    #
-    # NOTE: for most writers (outdir, label) is a safe proxy for the real output
-    # filename (they key the filename on outdir + label). The prolog writer is the
-    # exception — it writes fixed nodes.pl/edges.pl per outdir regardless of label —
-    # so _adapter_output_key coalesces prolog adapters by outdir alone. If a future
-    # writer maps two *distinct* labels to the same file, extend that helper.
     writer_type = str(writer_kwargs.get("writer_type", "")).lower()
-    file_groups: dict = defaultdict(list)
-    for name in pending:
-        file_groups[_adapter_output_key(name, adapters_dict[name], writer_type)].append(name)
-    for (outdir, label_key), names in file_groups.items():
-        if len(names) > 1:
-            logger.warning(
-                f"{len(names)} adapters resolve to the same output "
-                f"(outdir='{outdir}', label='{label_key}'): {names}. "
-                "They will run sequentially in one worker to avoid file corruption; "
-                "later ones overwrite earlier ones (pre-existing last-writer-wins behavior)."
-            )
-    group_list = [
-        [(name, adapters_dict[name]) for name in names]
-        for names in file_groups.values()
-    ]
-
     restored_datasets_snapshot = copy.deepcopy(datasets_dict)
     run_results: list = []
     failed_adapters: list = []
     first_exc = None
-    aborting = False
 
-    logger.info(
-        f"Running {len(pending)} adapter(s) in {len(group_list)} task group(s) "
-        f"with up to {max_workers} worker process(es)..."
-    )
+    def _save_checkpoint(failed):
+        if checkpoint_manager is None:
+            return
+        checkpoint_manager.save(
+            completed_adapters=completed_adapters,
+            nodes_count=nodes_count,
+            nodes_props=nodes_props,
+            edges_count=edges_count,
+            datasets_dict=datasets_dict,
+            failed_adapters=failed,
+            elapsed_seconds=time.time() - total_start,
+            extra={"harmonization": harmonization.checkpoint_state()} if harmonization is not None else None,
+        )
 
     ctx = mp.get_context("fork")
     executor = ProcessPoolExecutor(
@@ -808,103 +870,132 @@ def _process_adapters_parallel(
                 "Check the writer type and schema config path."
             ) from exc
 
-        future_to_group = {
-            executor.submit(_run_adapter_group, group, schema_dict, include_taxon_id): group
-            for group in group_list
-        }
+        for wave_index, (wave, pending) in enumerate(zip(waves, pending_by_wave)):
+            if first_exc is not None:
+                break
+            if wave_index > 0 and harmonization is not None:
+                harmonization.barrier(list(wave), completed_adapters)
+            if not pending:
+                continue
 
-        for fut in as_completed(future_to_group):
-            group = future_to_group[fut]
-            try:
-                group_results = fut.result()
-            except CancelledError:
-                continue  # cancelled by the abort path below; not a failure
-            except Exception as exc:
-                names = [n for n, _ in group]
-                failed_adapters.extend(names)
-                logger.error(f"Adapter group {names} crashed: {exc}")
-                if first_exc is None:
-                    first_exc = exc
-                group_results = []
-
-            for res in group_results:
-                name = res["adapter_name"]
-                if res.get("error"):
-                    failed_adapters.append(name)
-                    logger.error(f"Adapter '{name}' failed: {res['error']}")
-                    if first_exc is None:
-                        first_exc = RuntimeError(f"Adapter '{name}' failed: {res['error']}")
-                    continue
-
-                # Merge commutative accumulators.
-                for label, cnt in res["freq_nodes"].items():
-                    nodes_count[label] += cnt
-                for label, propset in res["props"].items():
-                    nodes_props[label] = nodes_props[label].union(propset)
-                for key, cnt in res["freq_edges"].items():
-                    edges_count[key] += cnt
-                for empty_name, empty_kind in res["empty"]:
-                    logger.warning(f"Adapter '{empty_name}' produced 0 {empty_kind}.")
-                    empty_output_adapters.append((empty_name, empty_kind))
-                adapter_times[name] = res["elapsed"]
-                if res["dataset_name"] is None:
+            # Coalesce adapters that resolve to the same output file — i.e. same outdir and
+            # same label — into one sequential task, so two workers never rewrite the same
+            # file concurrently (which would corrupt it). Adapters with distinct labels in a
+            # shared outdir write distinct files and stay fully parallel. Adapters without a
+            # declared label get a unique key so they never coalesce. A collision (>1 in a
+            # group) is warned about: it already yields last-writer-wins today.
+            #
+            # NOTE: for most writers (outdir, label) is a safe proxy for the real output
+            # filename (they key the filename on outdir + label). The prolog writer is the
+            # exception — it writes fixed nodes.pl/edges.pl per outdir regardless of label —
+            # so _adapter_output_key coalesces prolog adapters by outdir alone. If a future
+            # writer maps two *distinct* labels to the same file, extend that helper.
+            file_groups: dict = defaultdict(list)
+            for name in pending:
+                file_groups[_adapter_output_key(name, wave[name], writer_type)].append(name)
+            for (outdir, label_key), names in file_groups.items():
+                if len(names) > 1:
                     logger.warning(
-                        f"Dataset name is None for adapter: {name}. "
-                        "Ensure 'source' is defined in the adapter constructor."
+                        f"{len(names)} adapters resolve to the same output "
+                        f"(outdir='{outdir}', label='{label_key}'): {names}. "
+                        "They will run sequentially in one worker to avoid file corruption; "
+                        "later ones overwrite earlier ones (pre-existing last-writer-wins behavior)."
+                    )
+            group_list = [
+                [(name, wave[name]) for name in names]
+                for names in file_groups.values()
+            ]
+
+            wave_label = f" (wave {wave_index + 1}/{len(waves)})" if len(waves) > 1 else ""
+            logger.info(
+                f"Running {len(pending)} adapter(s) in {len(group_list)} task group(s) "
+                f"with up to {max_workers} worker process(es){wave_label}..."
+            )
+
+            future_to_group = {
+                executor.submit(_run_adapter_group, group, schema_dict, include_taxon_id, harmonization): group
+                for group in group_list
+            }
+
+            aborting = False
+            for fut in as_completed(future_to_group):
+                group = future_to_group[fut]
+                try:
+                    group_results = fut.result()
+                except CancelledError:
+                    continue  # cancelled by the abort path below; not a failure
+                except Exception as exc:
+                    names = [n for n, _ in group]
+                    failed_adapters.extend(names)
+                    logger.error(f"Adapter group {names} crashed: {exc}")
+                    if first_exc is None:
+                        first_exc = exc
+                    group_results = []
+
+                for res in group_results:
+                    name = res["adapter_name"]
+                    if res.get("error"):
+                        failed_adapters.append(name)
+                        logger.error(f"Adapter '{name}' failed: {res['error']}")
+                        if first_exc is None:
+                            first_exc = RuntimeError(f"Adapter '{name}' failed: {res['error']}")
+                        continue
+
+                    # Merge commutative accumulators.
+                    for label, cnt in res["freq_nodes"].items():
+                        nodes_count[label] += cnt
+                    for label, propset in res["props"].items():
+                        nodes_props[label] = nodes_props[label].union(propset)
+                    for key, cnt in res["freq_edges"].items():
+                        edges_count[key] += cnt
+                    for empty_name, empty_kind in res["empty"]:
+                        logger.warning(f"Adapter '{empty_name}' produced 0 {empty_kind}.")
+                        empty_output_adapters.append((empty_name, empty_kind))
+                    adapter_times[name] = res["elapsed"]
+                    if res["dataset_name"] is None:
+                        logger.warning(
+                            f"Dataset name is None for adapter: {name}. "
+                            "Ensure 'source' is defined in the adapter constructor."
+                        )
+                    if harmonization is not None:
+                        harmonization.record(res)
+
+                    run_results.append(res)
+                    completed_adapters.append(name)
+                    # Rebuild datasets_dict deterministically (sorted) for reproducibility.
+                    datasets_dict = _rebuild_datasets_dict(
+                        restored_datasets_snapshot, run_results, schema_dict
                     )
 
-                run_results.append(res)
-                completed_adapters.append(name)
-                # Rebuild datasets_dict deterministically (sorted) for reproducibility.
-                datasets_dict = _rebuild_datasets_dict(
-                    restored_datasets_snapshot, run_results, schema_dict
-                )
-
-                counts_parts = []
-                if res["write_nodes"]:
-                    counts_parts.append(f"nodes: {res['adapter_nodes']:,}")
-                if res["write_edges"]:
-                    counts_parts.append(f"edges: {res['adapter_edges']:,}")
-                counts_str = (", ".join(counts_parts) + " | ") if counts_parts else ""
-                logger.info(
-                    f"  >> [{len(completed_adapters)}/{total_adapters}] Adapter '{name}' completed"
-                    f"  [{counts_str}time: {_fmt_elapsed(res['elapsed'])}]"
-                )
-
-                if checkpoint_manager is not None:
-                    checkpoint_manager.save(
-                        completed_adapters=completed_adapters,
-                        nodes_count=nodes_count,
-                        nodes_props=nodes_props,
-                        edges_count=edges_count,
-                        datasets_dict=datasets_dict,
-                        failed_adapters=None,
-                        elapsed_seconds=time.time() - total_start,
+                    counts_parts = []
+                    if res["write_nodes"]:
+                        counts_parts.append(f"nodes: {res['adapter_nodes']:,}")
+                    if res["write_edges"]:
+                        counts_parts.append(f"edges: {res['adapter_edges']:,}")
+                    counts_str = (", ".join(counts_parts) + _alias_log_suffix(res) + " | ") if counts_parts else ""
+                    logger.info(
+                        f"  >> [{len(completed_adapters)}/{total_adapters}] Adapter '{name}' completed"
+                        f"  [{counts_str}time: {_fmt_elapsed(res['elapsed'])}]"
                     )
 
-            # On the first failure: stop starting new groups, but keep draining and
-            # merging those already running so completed work isn't discarded.
-            if first_exc is not None and not aborting:
-                aborting = True
-                logger.warning(
-                    "A failure occurred; cancelling queued adapters and draining "
-                    "in-flight ones before aborting."
-                )
-                executor.shutdown(wait=False, cancel_futures=True)
+                    _save_checkpoint(None)
+
+                # On the first failure: stop starting new groups, but keep draining and
+                # merging those already running so completed work isn't discarded.
+                if first_exc is not None and not aborting:
+                    aborting = True
+                    logger.warning(
+                        "A failure occurred; cancelling queued adapters and draining "
+                        "in-flight ones before aborting."
+                    )
+                    for other in future_to_group:
+                        other.cancel()
     finally:
         executor.shutdown(wait=True)
 
     if first_exc is not None:
         if checkpoint_manager is not None:
-            checkpoint_manager.save(
-                completed_adapters=completed_adapters,
-                nodes_count=nodes_count,
-                nodes_props=nodes_props,
-                edges_count=edges_count,
-                datasets_dict=datasets_dict,
-                failed_adapters=failed_adapters,
-                elapsed_seconds=time.time() - total_start,
-            )
+            _save_checkpoint(failed_adapters)
             logger.info(
                 "Checkpoint saved. Re-run the pipeline to resume "
                 f"failed/pending adapter(s): {failed_adapters}"
@@ -931,6 +1022,7 @@ def process_adapters(
     skip_preflight: bool = False,
     writer_kwargs: Optional[dict] = None,
     max_workers: int = 1,
+    harmonization: Optional[HarmonizationContext] = None,
 ):
     """
     Iterate over all adapters, write nodes/edges, and accumulate statistics.
@@ -946,10 +1038,18 @@ def process_adapters(
     When max_workers > 1 (and writer_kwargs is provided and the writer is not
     networkx), adapters run concurrently across a process pool; each worker builds
     its own writer from writer_kwargs. Otherwise the sequential path below is used.
+
+    With a HarmonizationContext (some entry sets 'aliases:'), entries are split
+    into work units run in two waves — node units, then every unit that writes
+    edges — with the alias registry built in between. Its results are left on
+    the context (``harmonization.summary()``).
     """
+    completed_adapters = list(
+        checkpoint_manager.completed_adapters if checkpoint_manager else []
+    )
+
     if not skip_preflight:
-        completed = set(checkpoint_manager.completed_adapters if checkpoint_manager else [])
-        adapters_to_check = {k: v for k, v in adapters_dict.items() if k not in completed}
+        adapters_to_check = adapters_with_pending_units(adapters_dict, completed_adapters)
         missing = _check_adapter_file_paths(adapters_to_check)
         if missing:
             _report_missing_paths(missing, include_hint=True)
@@ -965,19 +1065,20 @@ def process_adapters(
             f"{sum(nodes_count.values())} nodes, "
             f"{sum(edges_count.values())} edges."
         )
+        if harmonization is not None:
+            harmonization.restore(checkpoint_manager.restore_extra())
     else:
         nodes_count = Counter()
         nodes_props = defaultdict(set)
         edges_count = Counter()
         datasets_dict = {}
 
-    completed_adapters = list(
-        checkpoint_manager.completed_adapters if checkpoint_manager else []
-    )
+    waves = list(plan_waves(adapters_dict)) if harmonization is not None else [adapters_dict]
+
     empty_output_adapters: list[tuple[str, str]] = []
     elapsed_offset = checkpoint_manager.restore_elapsed() if checkpoint_manager else 0.0
     total_start = time.time() - elapsed_offset
-    total_adapters = len(adapters_dict)
+    total_adapters = sum(len(wave) for wave in waves)
     current_adapter_idx = 0
     adapter_times: dict[str, float] = {}
 
@@ -1006,167 +1107,157 @@ def process_adapters(
             completed_adapters,
             empty_output_adapters,
             total_start,
+            waves=waves,
+            harmonization=harmonization,
         )
 
-    for adapter_name in adapters_dict:
-        current_adapter_idx += 1
-        if adapter_name in completed_adapters:
-            logger.info(f"Skipping adapter (already completed): {adapter_name}")
-            continue
+    def _save_checkpoint(failed):
+        if checkpoint_manager is None:
+            return
+        checkpoint_manager.save(
+            completed_adapters=completed_adapters,
+            nodes_count=nodes_count,
+            nodes_props=nodes_props,
+            edges_count=edges_count,
+            datasets_dict=datasets_dict,
+            failed_adapters=failed,
+            elapsed_seconds=time.time() - total_start,
+            extra={"harmonization": harmonization.checkpoint_state()} if harmonization is not None else None,
+        )
 
-        adapter_start = time.time()
-        writer.clear_counts()
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info(f"  >> [{current_adapter_idx}/{total_adapters}] Running adapter: {adapter_name}  [total: {_fmt_elapsed(time.time() - total_start)}]")
-        logger.info("=" * 60)
+    for wave_index, wave in enumerate(waves):
+        if wave_index > 0 and harmonization is not None:
+            harmonization.barrier(list(wave), completed_adapters)
 
-        adapter_config = adapters_dict[adapter_name]["adapter"]
-        adapter_module = importlib.import_module(adapter_config["module"])
-        adapter_cls = getattr(adapter_module, adapter_config["cls"])
-        ctr_args = adapter_config["args"]
+        for adapter_name in wave:
+            current_adapter_idx += 1
+            if adapter_name in completed_adapters:
+                logger.info(f"Skipping adapter (already completed): {adapter_name}")
+                continue
 
-        if "dbsnp_rsid_map" in ctr_args:
-            ctr_args["dbsnp_rsid_map"] = dbsnp_rsids_dict
-        if "dbsnp_pos_map" in ctr_args:
-            ctr_args["dbsnp_pos_map"] = dbsnp_pos_dict
-        ctr_args["write_properties"] = write_properties
-        ctr_args["add_provenance"] = add_provenance
+            adapter_start = time.time()
+            writer.clear_counts()
+            logger.info("")
+            logger.info("=" * 60)
+            logger.info(f"  >> [{current_adapter_idx}/{total_adapters}] Running adapter: {adapter_name}  [total: {_fmt_elapsed(time.time() - total_start)}]")
+            logger.info("=" * 60)
 
-        adapter = adapter_cls(**ctr_args)
-        write_nodes = adapters_dict[adapter_name]["nodes"]
-        write_edges = adapters_dict[adapter_name]["edges"]
-        outdir = adapters_dict[adapter_name]["outdir"]
+            unit_entry = wave[adapter_name]
+            adapter_config = unit_entry["adapter"]
+            adapter_module = importlib.import_module(adapter_config["module"])
+            adapter_cls = getattr(adapter_module, adapter_config["cls"])
+            ctr_args = adapter_config["args"]
 
-        # Dataset provenance: prefer the download manifest (single source of truth),
-        # fall back to the adapter's own attributes when no manifest entry exists.
-        # dataset_name stays adapter-derived: it drives the CSV 'source' column and
-        # version_manager's source discovery, so it must match what the adapter writes.
-        prov = adapters_dict[adapter_name].get("provenance") or {}
-        dataset_name = getattr(adapter, "source", None)
-        version = prov.get("version") or getattr(adapter, "version", None)
-        source_url = prov.get("source_url") or getattr(adapter, "source_url", None)
+            if "dbsnp_rsid_map" in ctr_args:
+                ctr_args["dbsnp_rsid_map"] = dbsnp_rsids_dict
+            if "dbsnp_pos_map" in ctr_args:
+                ctr_args["dbsnp_pos_map"] = dbsnp_pos_dict
+            ctr_args["write_properties"] = write_properties
+            ctr_args["add_provenance"] = add_provenance
 
-        if dataset_name is None:
-            logger.warning(
-                f"Dataset name is None for adapter: {adapter_name}. "
-                "Ensure 'source' is defined in the adapter constructor."
-            )
-        elif dataset_name not in datasets_dict:
-            datasets_dict[dataset_name] = {
-                "name": dataset_name,
-                "version": version,
-                "url": source_url,
-                "date": prov.get("date"),
-                "citation": prov.get("citation"),
-                "license": prov.get("license"),
-                "checksums": prov.get("checksums"),
-                "nodes": set(),
-                "edges": set(),
-                "imported_on": str(date.today()),
-            }
+            adapter = adapter_cls(**ctr_args)
+            write_nodes = unit_entry["nodes"]
+            write_edges = unit_entry["edges"]
 
-        adapter_nodes = 0
-        adapter_edges = 0
+            # Dataset provenance: prefer the download manifest (single source of truth),
+            # fall back to the adapter's own attributes when no manifest entry exists.
+            # dataset_name stays adapter-derived: it drives the CSV 'source' column and
+            # version_manager's source discovery, so it must match what the adapter writes.
+            prov = unit_entry.get("provenance") or {}
+            dataset_name = getattr(adapter, "source", None)
+            version = prov.get("version") or getattr(adapter, "version", None)
+            source_url = prov.get("source_url") or getattr(adapter, "source_url", None)
 
-        try:
+            if dataset_name is None:
+                logger.warning(
+                    f"Dataset name is None for adapter: {adapter_name}. "
+                    "Ensure 'source' is defined in the adapter constructor."
+                )
+            elif dataset_name not in datasets_dict:
+                datasets_dict[dataset_name] = {
+                    "name": dataset_name,
+                    "version": version,
+                    "url": source_url,
+                    "date": prov.get("date"),
+                    "citation": prov.get("citation"),
+                    "license": prov.get("license"),
+                    "checksums": prov.get("checksums"),
+                    "nodes": set(),
+                    "edges": set(),
+                    "imported_on": str(date.today()),
+                }
+
+            try:
+                io = _run_adapter_io(writer, adapter, adapter_name, unit_entry, include_taxon_id, harmonization)
+            except Exception as exc:
+                elapsed = _fmt_elapsed(time.time() - adapter_start)
+                logger.error(f"Adapter '{adapter_name}' failed after {elapsed}: {exc}")
+                if checkpoint_manager is not None:
+                    _save_checkpoint([adapter_name])
+                    logger.info(
+                        f"Checkpoint saved. Re-run the pipeline to resume from adapter '{adapter_name}'."
+                    )
+                raise
+
+            for empty_name, empty_kind in io["empty"]:
+                logger.warning(f"Adapter '{empty_name}' produced 0 {empty_kind}.")
+                empty_output_adapters.append((empty_name, empty_kind))
+
+            for node_label, node_count in io["freq_nodes"].items():
+                nodes_count[node_label] += node_count
+                if dataset_name is not None:
+                    datasets_dict[dataset_name]["nodes"].add(node_label)
+            for node_label, node_props in io["props"].items():
+                nodes_props[node_label] = nodes_props[node_label].union(node_props)
+
+            for edge_label_key, edge_count in io["freq_edges"].items():
+                edges_count[edge_label_key] += edge_count
+
+                parts = edge_label_key.split("|")
+                edge_type = parts[0]
+
+                if edge_type.lower() in schema_dict:
+                    output_label = (
+                        schema_dict[edge_type.lower()]["output_label"] or edge_type
+                    )
+                else:
+                    output_label = edge_type
+
+                if dataset_name is not None:
+                    datasets_dict[dataset_name]["edges"].add(output_label)
+
+            if harmonization is not None:
+                harmonization.record(io)
+
+            adapter_elapsed = time.time() - adapter_start
+            adapter_times[adapter_name] = adapter_elapsed
+            completed_adapters.append(adapter_name)
+            counts_parts = []
             if write_nodes:
-                nodes = adapter.get_nodes()
-                if not include_taxon_id:
-                    nodes = _strip_taxon_id(nodes, is_edge=False)
-                freq, props = writer.write_nodes(nodes, path_prefix=outdir)
-                if not freq:
-                    logger.warning(f"Adapter '{adapter_name}' produced 0 nodes.")
-                    empty_output_adapters.append((adapter_name, "nodes"))
-                else:
-                    adapter_nodes = sum(freq.values())
-                for node_label, node_count in freq.items():
-                    nodes_count[node_label] += node_count
-                    if dataset_name is not None:
-                        datasets_dict[dataset_name]["nodes"].add(node_label)
-                for node_label, node_props in props.items():
-                    nodes_props[node_label] = nodes_props[node_label].union(node_props)
-
+                counts_parts.append(f"nodes: {io['adapter_nodes']:,}")
             if write_edges:
-                edges = adapter.get_edges()
-                if not include_taxon_id:
-                    edges = _strip_taxon_id(edges, is_edge=True)
-                freq = writer.write_edges(edges, path_prefix=outdir)
-                if not freq:
-                    logger.warning(f"Adapter '{adapter_name}' produced 0 edges.")
-                    empty_output_adapters.append((adapter_name, "edges"))
-                else:
-                    adapter_edges = sum(freq.values())
-                for edge_label_key, edge_count in freq.items():
-                    edges_count[edge_label_key] += edge_count
-
-                    parts = edge_label_key.split("|")
-                    edge_type = parts[0]
-
-                    if edge_type.lower() in schema_dict:
-                        output_label = (
-                            schema_dict[edge_type.lower()]["output_label"] or edge_type
-                        )
-                    else:
-                        output_label = edge_type
-
-                    if dataset_name is not None:
-                        datasets_dict[dataset_name]["edges"].add(output_label)
-
-        except Exception as exc:
-            elapsed = _fmt_elapsed(time.time() - adapter_start)
-            logger.error(f"Adapter '{adapter_name}' failed after {elapsed}: {exc}")
-            if checkpoint_manager is not None:
-                checkpoint_manager.save(
-                    completed_adapters=completed_adapters,
-                    nodes_count=nodes_count,
-                    nodes_props=nodes_props,
-                    edges_count=edges_count,
-                    datasets_dict=datasets_dict,
-                    failed_adapters=[adapter_name],
-                    elapsed_seconds=time.time() - total_start,
-                )
-                logger.info(
-                    f"Checkpoint saved. Re-run the pipeline to resume from adapter '{adapter_name}'."
-                )
-            raise
-
-        adapter_elapsed = time.time() - adapter_start
-        adapter_times[adapter_name] = adapter_elapsed
-        completed_adapters.append(adapter_name)
-        counts_parts = []
-        if write_nodes:
-            counts_parts.append(f"nodes: {adapter_nodes:,}")
-        if write_edges:
-            counts_parts.append(f"edges: {adapter_edges:,}")
-        counts_str = (", ".join(counts_parts) + " | ") if counts_parts else ""
-        logger.info(
-            f"Adapter '{adapter_name}' completed"
-            f"  [{counts_str}time: {_fmt_elapsed(adapter_elapsed)}]"
-        )
-        if checkpoint_manager is not None:
-            checkpoint_manager.save(
-                completed_adapters=completed_adapters,
-                nodes_count=nodes_count,
-                nodes_props=nodes_props,
-                edges_count=edges_count,
-                datasets_dict=datasets_dict,
-                failed_adapters=None,
-                elapsed_seconds=time.time() - total_start,
+                counts_parts.append(f"edges: {io['adapter_edges']:,}")
+            counts_str = (", ".join(counts_parts) + _alias_log_suffix(io) + " | ") if counts_parts else ""
+            logger.info(
+                f"Adapter '{adapter_name}' completed"
+                f"  [{counts_str}time: {_fmt_elapsed(adapter_elapsed)}]"
             )
-            # logger.info(f"Checkpoint updated after adapter: {adapter_name}")
+            _save_checkpoint(None)
 
     logger.info(f"All adapters completed in {_fmt_elapsed(time.time() - total_start)}")
     return nodes_count, nodes_props, edges_count, datasets_dict, adapter_times, empty_output_adapters, total_start
 
 
 def _write_graph_info(
-    nodes_count, nodes_props, edges_count, schema_dict, output_dir, datasets_dict, kg_format: str = ""
+    nodes_count, nodes_props, edges_count, schema_dict, output_dir, datasets_dict, kg_format: str = "",
+    harmonization: Optional[dict] = None,
 ):
     """Build and write graph_info.json."""
     graph_info = gather_graph_info(
         nodes_count, nodes_props, edges_count, schema_dict, output_dir, kg_format=kg_format
     )
+    if harmonization is not None:
+        graph_info["harmonization"] = harmonization
     # Sort by dataset name so the output is deterministic regardless of adapter
     # completion order (adapters can complete out of order under parallel execution).
     for dataset_name in sorted(datasets_dict):
@@ -1182,6 +1273,46 @@ def _write_graph_info(
 
     logger.info(f"graph_info.json written to {file_path}")
     return graph_info
+
+
+def _setup_harmonization(
+    all_adapters_dict: dict,
+    adapters_dict: dict,
+    schema_config_path,
+    schema_dict: dict,
+    output_dir: Path,
+    aliases: bool,
+    harmonize_edges: bool,
+) -> Optional[HarmonizationContext]:
+    """Entity harmonization context, or None when no entry sets 'aliases:'.
+
+    ``all_adapters_dict`` is the unfiltered config: entries left out by
+    --include-adapters still contribute their alias shards from earlier runs.
+    """
+    try:
+        all_alias = validate_alias_entries(all_adapters_dict)
+    except HarmonizationError as e:
+        logger.error(str(e))
+        raise typer.Exit(1)
+    if not all_alias:
+        return None
+    if not aliases:
+        logger.info(f"--no-aliases: ignoring 'aliases' on {len(all_alias)} adapter(s).")
+        return None
+
+    selections = {name: sel for name, sel in all_alias.items() if name in adapters_dict}
+    logger.info(
+        f"Entity harmonization: aliases enabled for {len(selections)} adapter(s) in this run"
+        f" ({len(all_alias)} in the config); edge harmonization "
+        f"{'on' if harmonize_edges else 'off'}."
+    )
+    return HarmonizationContext(
+        output_dir=output_dir,
+        schema_info=SchemaInfo.from_schema_file(schema_config_path, schema_dict),
+        selections=selections,
+        all_alias_entries={name: all_adapters_dict[name] for name in all_alias},
+        harmonize_edges=harmonize_edges,
+    )
 
 
 def _adapters_need_dbsnp(adapters_dict: dict) -> bool:
@@ -1482,6 +1613,25 @@ def main(
             "Not used with --species all (each species auto-discovers its own manifest)."
         ),
     ),
+    aliases: bool = typer.Option(
+        True,
+        "--aliases/--no-aliases",
+        help=(
+            "Honor 'aliases:' on adapters-config entries: write alias nodes and alias_of "
+            "edges for those adapters (dropping their flat synonym/alternative_ids/accessions "
+            "properties) and resolve other adapters' edge endpoints against them. "
+            "--no-aliases ignores 'aliases:' everywhere."
+        ),
+    ),
+    harmonize_edges: bool = typer.Option(
+        True,
+        "--harmonize-edges/--no-harmonize-edges",
+        help=(
+            "When aliases are enabled, rewrite edge endpoints that reference a canonical "
+            "entity by an unambiguous identifier alias; ambiguous and unresolved endpoints "
+            "are kept as-is and reported under <output-dir>/harmonization/."
+        ),
+    ),
     max_workers: Optional[int] = typer.Option(
         None,
         "--max-workers",
@@ -1632,6 +1782,7 @@ def main(
 
                         schema_dict = preprocess_schema(sp_schema_config)
                         sp_adapters_dict = _load_adapters_config(sp_adapters_config, sp, input_dir=input_dir)
+                        sp_all_adapters_dict = sp_adapters_dict
 
                         if include_adapters:
                             original_count = len(sp_adapters_dict)
@@ -1656,6 +1807,11 @@ def main(
                             logger.info(f"No adapters for {sp} require dbSNP, skipping dbSNP load.")
                             sp_dbsnp_rsids_dict, sp_dbsnp_pos_dict = {}, {}
 
+                        sp_harmonization = _setup_harmonization(
+                            sp_all_adapters_dict, sp_adapters_dict, sp_schema_config, schema_dict,
+                            sp_output_dir, aliases, harmonize_edges,
+                        )
+
                         nodes_count, nodes_props, edges_count, datasets_dict, adapter_times, empty_output_adapters, total_start = process_adapters(
                             sp_adapters_dict,
                             sp_dbsnp_rsids_dict,
@@ -1669,6 +1825,7 @@ def main(
                             skip_preflight=skip_preflight,
                             writer_kwargs=sp_writer_kwargs,
                             max_workers=max_workers,
+                            harmonization=sp_harmonization,
                         )
 
                         if writer_type == "networkx":
@@ -1686,6 +1843,7 @@ def main(
                             sp_output_dir,
                             datasets_dict,
                             kg_format=writer_type,
+                            harmonization=sp_harmonization.summary() if sp_harmonization else None,
                         )
 
                         if generate_data_source_schemas:
@@ -1878,6 +2036,7 @@ def main(
 
         schema_dict = preprocess_schema(schema_config)
         adapters_dict = _load_adapters_config(adapters_config, str(adapters_config), input_dir=input_dir, manifest_path=manifest)
+        all_adapters_dict = adapters_dict
 
         if include_adapters:
             original_count = len(adapters_dict)
@@ -1903,6 +2062,11 @@ def main(
             logger.info("No adapters require dbSNP, skipping dbSNP load.")
             dbsnp_rsids_dict, dbsnp_pos_dict = {}, {}
 
+        harmonization = _setup_harmonization(
+            all_adapters_dict, adapters_dict, schema_config, schema_dict,
+            output_dir, aliases, harmonize_edges,
+        )
+
         nodes_count, nodes_props, edges_count, datasets_dict, adapter_times, empty_output_adapters, total_start = process_adapters(
             adapters_dict,
             dbsnp_rsids_dict,
@@ -1916,6 +2080,7 @@ def main(
             skip_preflight=skip_preflight,
             writer_kwargs=writer_kwargs,
             max_workers=max_workers,
+            harmonization=harmonization,
         )
 
         if writer_type == "networkx":
@@ -1933,6 +2098,7 @@ def main(
             output_dir,
             datasets_dict,
             kg_format=writer_type,
+            harmonization=harmonization.summary() if harmonization else None,
         )
 
         if generate_data_source_schemas:

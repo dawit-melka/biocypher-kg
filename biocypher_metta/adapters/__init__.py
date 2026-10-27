@@ -1,5 +1,7 @@
 # Author Abdulrahman S. Omar <xabush@singularitynet.io>
 
+from biocypher_metta.harmonization.aliases import AliasSelection
+
 
 class Adapter:
     CURIE_PREFIX = {
@@ -96,9 +98,34 @@ class Adapter:
         # Add more organisms as needed
     }
 
+    # Entity harmonization (biocypher_metta/harmonization). An adapter that sets
+    # SUPPORTS_ALIASES attaches a typed alias payload (props['_aliases']) to the
+    # nodes it emits once the pipeline calls enable_aliases() for an
+    # adapters-config entry with 'aliases:'. The pipeline then removes the
+    # payload and ALIAS_LEGACY_PROPS (the flat alias lists the adapter emits
+    # today) from each node and writes alias nodes + alias_of edges instead.
+    SUPPORTS_ALIASES = False
+    ALIAS_LEGACY_PROPS = ()
+    emit_aliases = False
+    alias_selection = None
+
     def __init__(self, write_properties, add_provenance):
         self.write_properties = write_properties
         self.add_provenance = add_provenance
+
+    def enable_aliases(self, selection=None):
+        if not self.SUPPORTS_ALIASES:
+            raise NotImplementedError(f"{type(self).__name__} does not emit alias payloads")
+        self.emit_aliases = True
+        self.alias_selection = selection or AliasSelection()
+
+    def wants_alias(self, alias_type):
+        return self.emit_aliases and self.alias_selection.allows(alias_type)
+
+    @classmethod
+    def alias_fingerprint_deps(cls, args):
+        """Version stamps of caches this adapter's aliases depend on (for shard fingerprints)."""
+        return {}
 
     def get_nodes(self):
         pass

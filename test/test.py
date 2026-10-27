@@ -496,6 +496,75 @@ class TestBiocypherKG:
         if test_options["profile"]:
             print_profile_summary("edges", timings)
 
+    def test_alias_entries_in_schema(self, setup_class, request, tmp_path):
+        """
+        What it tests: for adapters-config entries with 'aliases:', runs the first
+        nodes through the pipeline's alias wrapper and checks that 'alias' is a
+        schema node label, every (alias, target) pair is a valid alias_of combo,
+        and no node keeps its legacy flat alias properties.
+        """
+        from biocypher_metta.harmonization.aliases import ALIAS_PAYLOAD_KEY, AliasSelection
+        from biocypher_metta.harmonization.pipeline import HarmonizationContext
+        from biocypher_metta.harmonization.schema_info import SchemaInfo
+        from biocypher_metta.harmonization.shard import AliasShard
+
+        node_labels, edges_schema, adapters_config, dbsnp_rsids_dict, dbsnp_pos_dict, test_options = setup_class
+        alias_entries = {name: config for name, config in adapters_config.items() if config.get("aliases")}
+        if not alias_entries:
+            pytest.skip("No adapters-config entries set 'aliases'")
+
+        assert "alias" in node_labels, "Schema has no 'alias' node type"
+        combos = edges_schema["alias_of"]["combos"]
+
+        schema_path = merge_schemas(request.config.getoption("--primer-schema-config"),
+                                    request.config.getoption("--species-schema-config"))
+        try:
+            schema_info = SchemaInfo.from_schema_file(schema_path)
+        finally:
+            delete_temp_schema(schema_path)
+
+        legacy_props = {"synonym", "alternative_ids", "accessions", ALIAS_PAYLOAD_KEY}
+        tested, alias_edges = 0, 0
+        for adapter_name, config in alias_entries.items():
+            module_name = config["adapter"]["module"]
+            should_skip, reason = should_skip_adapter(adapter_name, module_name, test_options["mode"])
+            if should_skip:
+                print(f"[aliases] Skipping adapter: {adapter_name} ({reason})")
+                continue
+
+            adapter_args = config["adapter"]["args"].copy()
+            if "dbsnp_rsid_map" in adapter_args:
+                adapter_args["dbsnp_rsid_map"] = dbsnp_rsids_dict
+            if "dbsnp_pos_map" in adapter_args:
+                adapter_args["dbsnp_pos_map"] = dbsnp_pos_dict
+            adapter_args["write_properties"] = True
+            adapter_args["add_provenance"] = True
+            adapter = getattr(importlib.import_module(module_name), config["adapter"]["cls"])(**adapter_args)
+            assert adapter.SUPPORTS_ALIASES, f"Adapter '{adapter_name}' sets 'aliases' but cannot emit them"
+
+            selection = AliasSelection.from_config(config["aliases"])
+            adapter.enable_aliases(selection)
+            shard = AliasShard(tmp_path / "shards", adapter_name, selection, schema_info,
+                               default_scope=getattr(adapter, "taxon_id", None))
+            nodes = HarmonizationContext.wrap_nodes(adapter.get_nodes(), shard, adapter)
+            for i, (_, _, props) in enumerate(nodes):
+                leftover = legacy_props & set(props)
+                assert not leftover, f"Adapter '{adapter_name}' kept alias props {leftover} in alias mode"
+                if i >= 200:
+                    break
+
+            for (source_type, _), (target_type, _), label, _ in shard.iter_alias_of_edges():
+                pair = (source_type, convert_input_labels(target_type).lower())
+                assert pair in combos, f"alias_of {pair} from adapter '{adapter_name}' is not in the schema"
+                alias_edges += 1
+            for _, label, _ in shard.iter_alias_nodes():
+                assert label in node_labels
+            shard.abort()
+            tested += 1
+
+        if tested:
+            assert alias_edges > 0, "Alias-enabled adapters produced no alias_of edges"
+
 
 # ---------------------------------------------------------------------------
 # Data source schema consistency tests (no BioCypher setup required)

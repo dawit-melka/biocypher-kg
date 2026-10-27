@@ -1,6 +1,7 @@
 from biocypher_metta.adapters import Adapter
 import gzip
 from biocypher_metta.adapters.helpers import check_genomic_location
+from biocypher_metta.harmonization.aliases import ALIAS_PAYLOAD_KEY, AliasCollector
 
 # Human data:
 # https://www.gencodegenes.org/human/
@@ -41,7 +42,10 @@ class GencodeTranscriptAdapter(Adapter):
                       'transcribes_to']
 
     ALLOWED_KEYS = ['gene_id', 'gene_type', 'gene_biotype', 'gene_name',  # 'gene_biotype'  key for dmel data
-                    'transcript_id', 'transcript_type', 'transcript_biotype', 'transcript_name'] # 'transcript_biotype'  key for dmel data
+                    'transcript_id', 'transcript_type', 'transcript_biotype', 'transcript_name', # 'transcript_biotype'  key for dmel data
+                    'havana_transcript']
+
+    SUPPORTS_ALIASES = True
 
     INDEX = {'chr': 0, 'type': 2, 'coord_start': 3, 'coord_end': 4, 'info': 8}
 
@@ -179,6 +183,12 @@ class GencodeTranscriptAdapter(Adapter):
                                 if self.add_provenance:
                                     props['source'] = self.source
                                     props['source_url'] = self.source_url
+
+                            if self.emit_aliases:
+                                aliases = AliasCollector(source=self.source)
+                                aliases.add(info.get('transcript_name'), 'preferred_name')
+                                aliases.add(info.get('havana_transcript'), 'xref', 'HAVANA')
+                                props[ALIAS_PAYLOAD_KEY] = aliases.to_list()
 
                             yield transcript_key, self.label, props
                 except Exception as e:

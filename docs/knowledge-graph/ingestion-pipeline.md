@@ -125,6 +125,12 @@ See [writers.md](writers.md) for format-specific details.
 
 ---
 
+## Entity harmonization (optional)
+
+When any adapters-config entry sets `aliases:`, adapters run in two waves: node-only work units first (alias-enabled adapters also write `alias` nodes and `alias_of` edges and record a shard), then, after the shards are merged into an alias registry, every unit that writes edges, with each edge endpoint resolved against the registry. Entries with both `nodes` and `edges` are split into `<name>::nodes` and `<name>::edges`. See [entity-harmonization.md](entity-harmonization.md) for the alias model, the endpoint statuses, the reports under `<output-dir>/harmonization/`, and the resume and partial-run rules.
+
+---
+
 ## Post-processing
 
 After all adapters complete:

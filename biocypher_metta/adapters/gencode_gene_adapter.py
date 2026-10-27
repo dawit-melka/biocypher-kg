@@ -1,7 +1,11 @@
 import gzip
+from pathlib import Path
 from biocypher_metta.adapters import Adapter
 from biocypher_metta.adapters.helpers import check_genomic_location
+from biocypher_metta.harmonization.aliases import ALIAS_PAYLOAD_KEY, AliasCollector
+from biocypher_metta.harmonization.fingerprint import version_stamp
 from biocypher_metta.processors import HGNCProcessor, EntrezEnsemblProcessor
+from biocypher_metta.processors.entrez_ensembl_processor import gene_info_record
 
 # Human data:
 # https://www.gencodegenes.org/human/
@@ -37,8 +41,13 @@ from biocypher_metta.processors import HGNCProcessor, EntrezEnsemblProcessor
 
 class GencodeGeneAdapter(Adapter):
     ALLOWED_KEYS = ['gene_id', 'gene_type', 'gene_biotype', 'gene_name',
-                    'transcript_id', 'transcript_type', 'transcript_name', 'hgnc_id', 'mgi_id']
+                    'transcript_id', 'transcript_type', 'transcript_name', 'hgnc_id', 'mgi_id',
+                    'havana_gene']
     INDEX = {'chr': 0, 'type': 2, 'coord_start': 3, 'coord_end': 4, 'info': 8}
+
+    SUPPORTS_ALIASES = True
+    ALIAS_LEGACY_PROPS = ('synonym',)
+    HGNC_CACHE_DIR = 'aux_files/hsa/hgnc'
 
     def __init__(self, write_properties, add_provenance, taxon_id, filepath, label,
                  gene_alias_file_path=None, chr=None, start=None, end=None):
@@ -63,6 +72,8 @@ class GencodeGeneAdapter(Adapter):
         self.hgnc_processor.load_or_update()
 
         # Pre-load gene aliases: use processor if no NCBI gene_info file is provided
+        self.entrez_processor = None
+        self._gene_info_records = None
         if gene_alias_file_path:
             self.gene_aliases = self.get_gene_alias()
         else:
@@ -76,8 +87,75 @@ class GencodeGeneAdapter(Adapter):
             )
             processor.load_or_update()
             self.gene_aliases = processor.gene_aliases
+            self.entrez_processor = processor
 
         super(GencodeGeneAdapter, self).__init__(write_properties, add_provenance)
+
+    @classmethod
+    def alias_fingerprint_deps(cls, args):
+        deps = {}
+        taxon_id = args.get('taxon_id')
+        if taxon_id == 9606:
+            deps['hgnc'] = version_stamp(Path(cls.HGNC_CACHE_DIR) / 'hgnc_version.json')
+        cache_dir = Adapter.SPECIES_INFO.get(taxon_id, {}).get('entrez_ensembl_cache_directory')
+        if cache_dir and not args.get('gene_alias_file_path'):
+            deps['entrez_ensembl'] = version_stamp(Path(cache_dir) / 'entrez_ensembl_version.json')
+        return deps
+
+    def gene_info_records(self):
+        """Typed NCBI gene_info records keyed by gene ID and 'HGNC:<n>' (alias mode only)."""
+        if self._gene_info_records is None:
+            if self.gene_alias_file_path:
+                records = {}
+                with gzip.open(self.gene_alias_file_path, 'rt') as input:
+                    next(input)
+                    for line in input:
+                        fields = line.rstrip('\n').split('\t')
+                        if len(fields) < 16 or fields[0] != str(self.taxon_id):
+                            continue
+                        record = gene_info_record(fields)
+                        if record:
+                            for key in record['gene_ids'] + ([record['hgnc_id']] if record['hgnc_id'] else []):
+                                records[key] = record
+                self._gene_info_records = records
+            else:
+                self._gene_info_records = self.entrez_processor.gene_info_records
+        return self._gene_info_records
+
+    def gene_alias_payload(self, raw_id, info, result):
+        """Typed aliases for one gene from data the adapter already holds."""
+        aliases = AliasCollector(source=self.source)
+        current = result['current'] if result['status'] not in ('unknown', 'ensembl_only') else None
+        human = self.taxon_id == 9606
+        aliases.add(current, 'approved_symbol', source='HGNC' if human else self.source)
+        if result['status'] == 'updated':
+            aliases.add(result['original'], 'previous_symbol')
+
+        hgnc_id = info.get('hgnc_id')
+        aliases.add(hgnc_id, 'xref', 'HGNC')
+        aliases.add(info.get('havana_gene'), 'xref', 'HAVANA')
+        aliases.add(info.get('mgi_id'), 'xref', 'MGI')
+
+        if human and current:
+            record = self.hgnc_processor.get_symbol_record(current)
+            aliases.extend(record['previous_symbols'], 'previous_symbol', source='HGNC')
+            aliases.extend(record['alias_symbols'], 'alias_symbol', source='HGNC')
+            aliases.add(record['name'], 'full_name', source='HGNC')
+            aliases.add(record['entrez_id'], 'xref', 'NCBIGene', source='HGNC')
+            aliases.add(record['hgnc_id'], 'xref', 'HGNC', source='HGNC')
+
+        records = self.gene_info_records()
+        ncbi = records.get(raw_id) or (records.get(hgnc_id) if hgnc_id else None)
+        if ncbi:
+            aliases.add(ncbi['entrez_id'], 'xref', 'NCBIGene', source='NCBI Gene')
+            aliases.add(ncbi['nomenclature_symbol'], 'approved_symbol', source='NCBI Gene')
+            if ncbi['symbol'] != ncbi['nomenclature_symbol']:
+                aliases.add(ncbi['symbol'], 'alias_symbol', source='NCBI Gene')
+            aliases.extend(ncbi['synonyms'], 'alias_symbol', source='NCBI Gene')
+            aliases.add(ncbi['full_name'], 'full_name', source='NCBI Gene')
+            aliases.extend(ncbi['other_designations'], 'other_designation', source='NCBI Gene')
+            aliases.add(ncbi['hgnc_id'], 'xref', 'HGNC', source='NCBI Gene')
+        return aliases.to_list()
  
 
     def parse_info_metadata(self, info):
@@ -157,7 +235,9 @@ class GencodeGeneAdapter(Adapter):
                     if not alias:
                         hgnc_id = info.get('hgnc_id')
                         if hgnc_id:
-                            alias = alias_dict.get(hgnc_id.replace('HGNC:', ''))
+                            # Alias dicts key HGNC entries as 'HGNC:<n>' (NCBI dbXrefs
+                            # read 'HGNC:HGNC:<n>' and drop the first prefix).
+                            alias = alias_dict.get(hgnc_id) or alias_dict.get(hgnc_id.replace('HGNC:', ''))
                     
                     chr = split_line[GencodeGeneAdapter.INDEX['chr']]
                     start = int(split_line[GencodeGeneAdapter.INDEX['coord_start']])
@@ -197,6 +277,8 @@ class GencodeGeneAdapter(Adapter):
                                 if self.add_provenance:
                                     props['source'] = self.source
                                     props['source_url'] = self.source_url
+                            if self.emit_aliases:
+                                props[ALIAS_PAYLOAD_KEY] = self.gene_alias_payload(raw_id, info, result)
                             processed_records += 1
                             yield id, self.label, props
                         else:
