@@ -20,7 +20,9 @@ Maps between HGNC gene symbols, numeric IDs, aliases, and Ensembl IDs.
 **Update Strategy:** Time-based (every 48 hours) - API lacks remote version metadata
 **Mappings:**
 - Current HGNC symbols (`current_symbols`)
-- Previous/alias symbols → current symbols (`symbol_aliases`)
+- Previous/alias symbols → current symbols (`symbol_aliases`; unambiguous entries only)
+- Every candidate per previous/alias symbol (`previous_to_symbols`, `alias_to_symbols`) and the reverse per approved symbol (`symbol_to_previous`, `symbol_to_alias`)
+- Approved name and NCBI Gene ID per symbol (`symbol_to_name`, `symbol_to_entrez`, `symbol_to_hgnc_id`)
 - Symbol ↔ Ensembl ID (`symbol_to_ensembl`, `ensembl_to_symbol`)
 - HGNC ID → Symbol (`hgnc_id_to_symbol`)
 - HGNC ID → Ensembl ID (`hgnc_id_to_ensembl`)
@@ -53,7 +55,15 @@ ensembl_id = hgnc.get_ensembl_id('HGNC:11998')  # Also works!
 
 # Get symbol from HGNC ID
 symbol = hgnc.get_symbol_from_hgnc_id('HGNC:11998')
+
+# Resolve any symbol: approved, then a unique previous symbol, then a unique
+# alias symbol, then the same tiers case-insensitively. Ambiguous -> None.
+hgnc.resolve_symbol('P53')            # 'TP53'
+hgnc.get_symbol_candidates('ASP')     # {'approved': [], 'previous': [...], 'alias': [...]}
+hgnc.get_symbol_record('TP53')        # typed nomenclature (used for gene alias nodes)
 ```
+
+`get_ensembl_id(symbol)` uses `resolve_symbol`, so outdated and alias symbols map to the current gene when the match is unique. HGNC's download joins multi-valued columns with `", "`; caches written before this split was fixed are migrated on load (re-fetched, or rebuilt from the joined keys when offline).
 
 ### 2. DBSNPProcessor
 
@@ -222,7 +232,8 @@ Maps between NCBI Entrez Gene IDs and Ensembl Gene IDs, and provides gene alias 
 
 **Mappings:**
 - Entrez Gene ID → Ensembl Gene ID (`entrez_to_ensembl`)
-- Gene aliases keyed by Ensembl ID and HGNC ID (`gene_aliases`)
+- Gene aliases keyed by Ensembl ID and HGNC ID (`gene_aliases`, a flat list per gene)
+- Typed NCBI gene_info records keyed by gene ID (Ensembl/FBgn/WBGene) and `HGNC:<n>` (`gene_info`: symbol, nomenclature symbol, synonyms, full name, other designations, HGNC ID), used for gene alias nodes; caches without them are refreshed on first use of `gene_info_records`
 
 The gene alias dict is built from NCBI Gene Info fields: symbol, synonyms, dbxrefs (HGNC/Ensembl), nomenclature symbol, full name, and other designations. This replaces the need for a separate `Homo_sapiens.gene_info.gz` file and the `get_gene_alias()` method in `GencodeGeneAdapter` for human data. Dmel still uses its own file-based path (`Drosophila_melanogaster.gene_info.gz`).
 

@@ -109,6 +109,8 @@ Each entry declares one adapter invocation:
 | `outdir` | Yes | Output subdirectory under `--output-dir` |
 | `nodes` | No | Default `True` — whether to call `get_nodes()` |
 | `edges` | No | Default `False` — whether to call `get_edges()` |
+| `aliases` | No | `true` or `{alias_types: [...]}` / `{exclude_alias_types: [...]}` — write alias nodes and `alias_of` edges for this adapter's nodes and drop its flat alias properties. Only on entries with `nodes: True`. See [entity-harmonization.md](../knowledge-graph/entity-harmonization.md) |
+| `harmonize_edges` | No | Default `True` — set `false` to keep this entry's edge endpoints out of alias resolution |
 
 ### Path resolution in `args`
 
@@ -240,6 +242,9 @@ All flags are defined by `typer.Option()` in `main()`. Run `uv run python create
 | `--add-provenance` / `--no-add-provenance` | bool | `True` | Add dataset provenance metadata |
 | `--include-taxon-id` / `--no-taxon-id` | bool | `True` | Include `taxon_id` on nodes/edges |
 | `--include-curie` / `--no-curie` | bool | `False` | Keep CURIE namespace prefixes in IDs |
+| `--aliases` / `--no-aliases` | bool | `True` | Honor `aliases:` on adapters-config entries |
+| `--harmonize-edges` / `--no-harmonize-edges` | bool | `True` | Resolve edge endpoints against the alias registry when aliases are enabled |
+| `--max-workers` | int | `min(8, CPUs)` | Parallel adapter worker processes; `1` runs sequentially |
 | `--dbsnp-cache-root` | Path | — | Root directory of dbSNP SQLite cache |
 | `--dbsnp-variant` | str | — | `common` or `full` |
 | `--include-adapters` | str[] | — | Space-separated list of adapter keys to run (default: all) |

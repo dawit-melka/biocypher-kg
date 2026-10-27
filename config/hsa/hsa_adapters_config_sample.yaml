@@ -23,6 +23,7 @@ gencode_gene:
   outdir: ensembl/gene
   nodes: True
   edges: False
+  aliases: true
 
 gencode_transcripts:
   adapter:
@@ -36,6 +37,7 @@ gencode_transcripts:
   outdir: ensembl/transcript
   nodes: True
   edges: False
+  aliases: true
 
 gencode_transcribes_to:
   adapter:
@@ -100,6 +102,7 @@ uniprot_sprot:
   outdir: uniprot
   nodes: True
   edges: False
+  aliases: true
 
 uniprot_sprot_translates_to:
   adapter:
@@ -364,6 +367,7 @@ go_biological_process:
   outdir: gene_ontology/biological_process
   nodes: True
   edges: False
+  aliases: true
 
 go_biological_process_subclass_of:
   adapter:
@@ -393,6 +397,7 @@ go_molecular_function:
   outdir: gene_ontology/molecular_function
   nodes: True
   edges: False
+  aliases: true
 
 go_molecular_function_subclass_of:
   adapter:
@@ -422,6 +427,7 @@ go_cellular_component:
   outdir: gene_ontology/cellular_component
   nodes: True
   edges: False
+  aliases: true
 
 go_cellular_component_subclass_of:
   adapter:
@@ -817,6 +823,7 @@ hpo_human_phenotype_ontology:
   outdir: human_phenotype_ontology
   nodes: True
   edges: False
+  aliases: true
 
 hpo_subclass_of:
   adapter:
@@ -977,6 +984,7 @@ do_disease_ontology:
   outdir: disease
   nodes: True
   edges: False
+  aliases: true
 
 do_disease_do_subclass_of:
   adapter:
@@ -1153,6 +1161,7 @@ bto_brenda_tissue_ontology:
   outdir: brenda_tissue_ontology
   nodes: True
   edges: False
+  aliases: true
 
 bto_subclass_of:
   adapter:
@@ -1195,6 +1204,7 @@ clo_cell_line_ontology:
   outdir: cell_line_ontology
   nodes: True
   edges: False
+  aliases: true
 
 clo_subclass_of:
   adapter:
@@ -1237,6 +1247,7 @@ uberon:
   outdir: uberon
   nodes: True
   edges: False
+  aliases: true
 
 anatomy_subclass_of:
   adapter:
@@ -1265,6 +1276,7 @@ cl_cell_ontology:
   outdir: cell_ontology
   nodes: True
   edges: False
+  aliases: true
 
 cl_subclass_of:
   adapter:
@@ -1364,6 +1376,7 @@ hsapdv_developmental_stage:
   outdir: hsapdv
   nodes: True
   edges: False
+  aliases: true
 
 hsapdv_subclass_of:
   adapter:

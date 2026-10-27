@@ -24,6 +24,12 @@ class BaseWriter:
 
 ---
 
+### Alias output
+
+With [entity harmonization](entity-harmonization.md), the pipeline calls `write_nodes`/`write_edges` a second time per alias-enabled adapter, with `path_prefix=<outdir>/aliases/<adapter>`, for `alias` nodes and `alias_of` edges. The separate directory keeps writers that use fixed file names (Prolog's `nodes.pl`/`edges.pl`) from overwriting the adapter's own output. Alias IDs (`ALIAS_<hex>`) contain no `:`, so every `preprocess_id` keeps nodes and edges in agreement. `alias_of` is the only edge type with a list-valued `target`; endpoints are typed tuples, and the Parquet writer writes such an edge once, for the tuple's type, rather than once per listed type. Alias node and edge counts in `graph_info.json` come from the alias shard, not from writer return values.
+
+---
+
 ## Neo4j CSV (`neo4j_csv_writer.py`)
 
 **Class:** `Neo4jCSVWriter`  

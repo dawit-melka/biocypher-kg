@@ -47,6 +47,30 @@ ERROR: Pre-flight check failed — 2 adapter(s) have missing file paths:
 
 ---
 
+### Entity harmonization stops the run
+
+**Symptom:** one of
+
+```
+HarmonizationError: Stale alias shard(s) from an earlier run: gencode_gene (changed: files)...
+HarmonizationError: Alias shard missing or out of date for adapter(s) in this run: ... Re-run with --restart.
+HarmonizationError: The alias registry differs from the one used by edge adapters completed in the checkpointed run...
+```
+
+**Cause:** an alias shard under `<output_dir>/harmonization/shards/` no longer matches the adapter's current inputs or config (input file, args, `aliases:` selection, schema entry, or HGNC/Entrez cache version), so resolving edges against it could point them at entities that are no longer emitted. See [entity-harmonization.md](../knowledge-graph/entity-harmonization.md#shards-partial-runs-and-resume).
+
+**Resolution:**
+- Partial run (`--include-adapters`): include the adapter named in the message so its shard is rebuilt, or pass `--no-harmonize-edges`.
+- Resumed run: rerun with `--restart`.
+
+---
+
+### Many `unresolved` or `ambiguous` edge endpoints
+
+`graph_info.json` → `harmonization.edge_harmonization` counts endpoint statuses per adapter; `<output_dir>/harmonization/unresolved_ids.tsv` and `ambiguous_ids.tsv` list the IDs, most frequent first (`candidates` names the competing canonical nodes). Unresolved endpoints were kept as-is: they reference an entity no alias-enabled adapter emitted (common in sample builds, where inputs are subsets). Add `aliases:` to the adapter that emits that entity type, or check the ID spelling in the edge adapter.
+
+---
+
 ### Species `rno` raises `FileNotFoundError`
 
 **Symptom:**

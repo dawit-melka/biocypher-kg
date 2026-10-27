@@ -20,6 +20,9 @@ recent cache and never attempts the blocked download.
 
 Usage:
     python scripts/build_dmel_entrez_ensembl_cache.py
+    # add typed gene_info records (used for gene alias nodes) to an existing cache,
+    # without needing the GTF:
+    python scripts/build_dmel_entrez_ensembl_cache.py --add-gene-info-only
 """
 
 import argparse
@@ -28,8 +31,12 @@ import json
 import logging
 import pickle
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from biocypher_metta.processors.entrez_ensembl_processor import gene_info_record  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -41,6 +48,24 @@ TAX_ID = "7227"
 
 GENE_ID_RE = re.compile(r'gene_id "([^"]+)"')
 GENE_NAME_RE = re.compile(r'(?:gene_name|gene_symbol) "([^"]+)"')
+
+
+def build_gene_info_records(gene_info_path):
+    """Typed records keyed by FBgn and HGNC ID (same shape as EntrezEnsemblProcessor)."""
+    gene_info = {}
+    with gzip.open(gene_info_path, "rt", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("#") or not line.strip():
+                continue
+            fields = line.split("\t")
+            if len(fields) < 16 or fields[0] != TAX_ID:
+                continue
+            record = gene_info_record(fields)
+            if record:
+                for key in record["gene_ids"] + ([record["hgnc_id"]] if record["hgnc_id"] else []):
+                    gene_info[key] = record
+    logger.info("Built %d typed gene_info records", len(gene_info))
+    return gene_info
 
 
 def build_mapping(gene_info_path, gtf_path):
@@ -109,7 +134,27 @@ def build_mapping(gene_info_path, gtf_path):
     }
     logger.info("Built %d Entrez-FBgn mappings", len(entrez_to_ensembl))
 
-    return {"entrez_to_ensembl": entrez_to_ensembl, "gene_aliases": gene_aliases}
+    return {
+        "entrez_to_ensembl": entrez_to_ensembl,
+        "gene_aliases": gene_aliases,
+        "gene_info": build_gene_info_records(gene_info_path),
+    }
+
+
+def add_gene_info_to_cache(gene_info_path, cache_dir):
+    """Add typed records to an existing cache, keeping its timestamp."""
+    cache_dir = Path(cache_dir)
+    mapping_file = cache_dir / "entrez_ensembl_mapping.pkl"
+    version_file = cache_dir / "entrez_ensembl_version.json"
+    with gzip.open(mapping_file, "rb") as f:
+        mapping = pickle.load(f)
+    mapping["gene_info"] = build_gene_info_records(gene_info_path)
+    with gzip.open(mapping_file, "wb") as f:
+        pickle.dump(mapping, f, protocol=pickle.HIGHEST_PROTOCOL)
+    version_info = json.loads(version_file.read_text())
+    version_info["entries"] = sum(len(v) for v in mapping.values())
+    version_file.write_text(json.dumps(version_info, indent=2))
+    logger.info("Added typed gene_info records to %s", mapping_file)
 
 
 def write_cache(mapping, cache_dir):
@@ -139,7 +184,13 @@ def main():
     parser.add_argument("--gene-info", default=DEFAULT_GENE_INFO)
     parser.add_argument("--gtf", default=DEFAULT_GTF)
     parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR)
+    parser.add_argument("--add-gene-info-only", action="store_true",
+                        help="Only add typed gene_info records to the existing cache (no GTF needed).")
     args = parser.parse_args()
+
+    if args.add_gene_info_only:
+        add_gene_info_to_cache(args.gene_info, args.cache_dir)
+        return
 
     mapping = build_mapping(args.gene_info, args.gtf)
     if not mapping["entrez_to_ensembl"]:

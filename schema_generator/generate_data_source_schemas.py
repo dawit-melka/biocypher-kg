@@ -416,13 +416,39 @@ class AdapterAnalyzer:
         all_props = self.get_all_class_properties()
         return main_props.union(all_props)
 
+    def get_properties_from_method_and_helpers(self, method_name: str, tuple_index: int) -> Set[str]:
+        """Properties built in a method or in the self.<helper>() methods it calls.
+
+        OntologyAdapter.get_nodes builds its props in _build_term_props().
+        """
+        properties = self.get_properties_from_method(method_name, tuple_index)
+        functions = {
+            node.name: node for node in ast.walk(self.tree) if isinstance(node, ast.FunctionDef)
+        }
+        method = functions.get(method_name)
+        if method is None:
+            return properties
+        for call in ast.walk(method):
+            if (
+                isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Attribute)
+                and isinstance(call.func.value, ast.Name)
+                and call.func.value.id == 'self'
+                and call.func.attr in functions
+                and call.func.attr != method_name
+            ):
+                helper = functions[call.func.attr]
+                property_vars = self.get_property_variables_from_method(helper, tuple_index)
+                properties.update(self.extract_properties_for_vars_from_method(helper, property_vars))
+        return properties
+
     def get_parent_class_properties(self, method_name: str, parent_adapter_path: Path) -> Set[str]:
         if not parent_adapter_path.exists():
             return set()
         try:
             parent_analyzer = AdapterAnalyzer(parent_adapter_path)
             tuple_index = 2 if method_name == 'get_nodes' else 3
-            return parent_analyzer.get_properties_from_method(method_name, tuple_index)
+            return parent_analyzer.get_properties_from_method_and_helpers(method_name, tuple_index)
         except Exception as e:
             print(f"Warning: Could not analyze parent class {parent_adapter_path}: {e}")
             return set()

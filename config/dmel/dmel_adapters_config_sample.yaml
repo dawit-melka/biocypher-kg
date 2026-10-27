@@ -31,6 +31,7 @@ gencode_gene:
   outdir: ensembl/gene
   nodes: True
   edges: False
+  aliases: true
 
 gencode_transcripts:
   adapter:
@@ -44,6 +45,7 @@ gencode_transcripts:
   outdir: ensembl/transcript
   nodes: True
   edges: False
+  aliases: true
 
 gencode_transcribes_to:
   adapter:
@@ -108,6 +110,7 @@ uniprot_sprot:
   outdir: uniprot/uniprot
   nodes: True
   edges: False
+  aliases: true
 
 uniprot_sprot_translates_to:
   adapter:
@@ -673,6 +676,7 @@ fbdv_development_ontology:
   outdir: dev_stage
   nodes: True
   edges: False
+  aliases: true
 
 fbdv_subclass_of:
   adapter:
@@ -701,6 +705,7 @@ fbbt_gross_anatomy_ontology:
   outdir: anatomy
   nodes: True
   edges: False
+  aliases: true
 
 fbbt_subclass_of:
   adapter:
@@ -730,6 +735,7 @@ fbcv_controlled_vocabulary_ontology:
   outdir: fbcv_phenotype
   nodes: True
   edges: False
+  aliases: true
 
 fbcv_subclass_of:
   adapter:
@@ -811,6 +817,7 @@ go_biological_process:
   outdir: gene_ontology/biological_process
   nodes: True
   edges: False
+  aliases: true
 
 go_biological_process_subclass_of:
   adapter:
@@ -840,6 +847,7 @@ go_molecular_function:
   outdir: gene_ontology/molecular_function
   nodes: True
   edges: False
+  aliases: true
 
 go_molecular_function_subclass_of:
   adapter:
@@ -869,6 +877,7 @@ go_cellular_component:
   outdir: gene_ontology/cellular_component
   nodes: True
   edges: False
+  aliases: true
 
 go_cellular_component_subclass_of:
   adapter:
@@ -897,6 +906,7 @@ so_sequence_ontology:
   outdir: sequence_type
   nodes: True
   edges: False
+  aliases: true
 
 so_sequence_subclass_of:
   adapter:
@@ -953,6 +963,7 @@ do_disease_ontology:
   outdir: disease
   nodes: True
   edges: False
+  aliases: true
 
 do_disease_do_subclass_of:
   adapter:

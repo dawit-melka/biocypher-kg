@@ -286,6 +286,19 @@ All Drosophila-specific nodes carry `taxon_id: 7227`.
 
 ---
 
+## Aliases (entity harmonization)
+
+When an adapters-config entry sets `aliases:`, the adapter's alternate names and cross-reference identifiers are written as `alias` nodes linked to the canonical node by `alias_of` edges, and that adapter's flat `synonym`, `alternative_ids` and `accessions` properties are dropped. Without `aliases:` those flat properties are unchanged.
+
+| Type | Kind | Key properties | Endpoints |
+|---|---|---|---|
+| `alias` | node | `name`, `namespace`, `normalized_name`, `alias_kind` (`identifier`/`name`), `entity_type`, `scope` | — |
+| `alias of` (`alias_of`) | edge | `alias_type` (str[]), `alias_source` (str[]), `source`, `source_url` | `alias` → gene, transcript, protein, any ontology-term type |
+
+An alias with more than one `alias_of` edge is ambiguous. See [entity-harmonization.md](entity-harmonization.md).
+
+---
+
 ## Schema YAML structure reference
 
 Every node declaration in a schema YAML follows this pattern:

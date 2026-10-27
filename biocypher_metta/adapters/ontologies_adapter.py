@@ -10,6 +10,7 @@ from rdflib import Graph, URIRef
 from owlready2 import *
 from abc import ABC, abstractmethod
 from biocypher_metta.adapters import Adapter
+from biocypher_metta.harmonization.aliases import ALIAS_PAYLOAD_KEY, AliasCollector
 from xml.etree import ElementTree as ET
 
 
@@ -50,6 +51,13 @@ class OntologyAdapter(Adapter):
     DESCRIPTION = rdflib.term.URIRef('http://purl.obolibrary.org/obo/IAO_0000115')
     DEPRECATED = rdflib.term.URIRef('http://www.w3.org/2002/07/owl#deprecated')
     ALTERNATIVE_ID = rdflib.term.URIRef('http://www.geneontology.org/formats/oboInOwl#hasAlternativeId')
+    BROAD_SYNONYM = rdflib.term.URIRef('http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym')
+    NARROW_SYNONYM = rdflib.term.URIRef('http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym')
+    TERM_REPLACED_BY = rdflib.term.URIRef('http://purl.obolibrary.org/obo/IAO_0100001')
+
+    SUPPORTS_ALIASES = True
+    ALIAS_LEGACY_PROPS = ('synonym', 'alternative_ids')
+    MAX_REPLACED_BY_HOPS = 5
 
 
     PREDICATES = [SUBCLASS, DB_XREF]
@@ -61,6 +69,19 @@ class OntologyAdapter(Adapter):
     # is a separate instance that would otherwise redownload/reparse the
     # identical file from scratch. Keyed by (ontology name, cache_dir).
     _ONTOLOGY_LOAD_CACHE = {}
+
+    @classmethod
+    def alias_fingerprint_deps(cls, args):
+        """Content hash of the cached ontology file the aliases were read from."""
+        cache_dir, ontology = args.get('cache_dir'), args.get('ontology')
+        if not cache_dir or not ontology:
+            return {}
+        try:
+            with open(os.path.join(cache_dir, f"{ontology}_meta.json")) as f:
+                meta = json.load(f)
+        except (OSError, ValueError):
+            return {'ontology_cache': None}
+        return {'ontology_cache': meta.get('hash') or meta.get('version')}
 
     def __init__(self, write_properties, add_provenance, ontology, type, label, dry_run=False, add_description=False, cache_dir=None, cache_expiration_days=30):
         self.cache_dir = cache_dir
@@ -551,9 +572,19 @@ class OntologyAdapter(Adapter):
     def get_nodes(self):
         self.update_graph()
         self.cache_node_properties()
+        if self.emit_aliases:
+            self.cache_alias_properties()
 
+        for node, node_key in self._iter_candidate_terms():
+            props = self._build_term_props(node)
+            if self.emit_aliases:
+                props[ALIAS_PAYLOAD_KEY] = self._build_term_aliases(node, node_key)
+            yield node_key, self._term_node_label(node, node_key), props
+
+    def _iter_candidate_terms(self):
+        """Yield (node, node_key) for every term get_nodes emits, in emission order."""
         nodes = self.graph.all_nodes()
-        processed_nodes = set()  
+        processed_nodes = set()
 
         i = 0  # dry run counter
         for node in nodes:
@@ -563,49 +594,103 @@ class OntologyAdapter(Adapter):
             # Skip if not a URIRef (avoiding blank nodes and literals)
             if not isinstance(node, rdflib.term.URIRef):
                 continue
-        
+
             # Skip restriction blocks - they're not actual terms
             if self.is_a_restriction_block(node):
                 continue
 
             # Get the node's key
             node_key = self._process_node_key(node)
-        
+
             # Skip if we've already processed this node or if it's invalid
             if node_key is None or node_key in processed_nodes:
                 continue
-        
+
             # Skip deprecated nodes
             if self.is_deprecated(node):
-                # print(f"Skipping deprecated node: {node_key}")
                 continue
 
-            term_name = ', '.join(self.get_all_property_values_from_node(node, 'term_names'))
-            synonyms = (self.get_all_property_values_from_node(node, 'related_synonyms') + 
-                self.get_all_property_values_from_node(node, 'exact_synonyms'))
-            alternative_ids = self.get_alternative_ids(node)
-
-            props = {}
-            if self.write_properties:
-                props['term_name'] = term_name
-                if synonyms:
-                    props['synonym'] = synonyms
-                if alternative_ids:
-                    props['alternative_ids'] = alternative_ids
-
-                if self.add_description:
-                    description = ' '.join(self.get_all_property_values_from_node(node, 'descriptions'))
-                    if description:  
-                        props['description'] = description
-
-                if self.add_provenance:
-                    props['source'] = self.source
-                    props['source_url'] = self.source_url
-
             processed_nodes.add(node_key)
-    
             i += 1
-            yield node_key, self.label, props
+            yield node, node_key
+
+    def _term_node_label(self, node, node_key):
+        return self.label
+
+    def _build_term_props(self, node):
+        term_name = ', '.join(self.get_all_property_values_from_node(node, 'term_names'))
+        synonyms = (self.get_all_property_values_from_node(node, 'related_synonyms') +
+            self.get_all_property_values_from_node(node, 'exact_synonyms'))
+        alternative_ids = self.get_alternative_ids(node)
+
+        props = {}
+        if self.write_properties:
+            props['term_name'] = term_name
+            if synonyms:
+                props['synonym'] = synonyms
+            if alternative_ids:
+                props['alternative_ids'] = alternative_ids
+
+            if self.add_description:
+                description = ' '.join(self.get_all_property_values_from_node(node, 'descriptions'))
+                if description:
+                    props['description'] = description
+
+            if self.add_provenance:
+                props['source'] = self.source
+                props['source_url'] = self.source_url
+        return props
+
+    # ── entity harmonization ───────────────────────────────────────────────
+
+    def cache_alias_properties(self):
+        if self.wants_alias('broad_synonym'):
+            self.cache_predicate(predicate=OntologyAdapter.BROAD_SYNONYM, collection='broad_synonyms')
+        if self.wants_alias('narrow_synonym'):
+            self.cache_predicate(predicate=OntologyAdapter.NARROW_SYNONYM, collection='narrow_synonyms')
+
+    def _term_key(self, value):
+        """Term key for an IRI, IRI literal or CURIE literal (replaced_by values come in all three)."""
+        text = str(value).strip()
+        if not text:
+            return None
+        if isinstance(value, URIRef) or text.startswith(('http://', 'https://')):
+            return self.to_key(URIRef(text))
+        return text.replace('_', ':', 1) if ':' not in text else text
+
+    def _replaced_by_index(self):
+        """{replacement term key: [obsolete term keys]}, following replaced_by chains."""
+        index = getattr(self, '_replaced_by', None)
+        if index is not None:
+            return index
+        replaced = {}
+        for subject, obj in self.graph.subject_objects(predicate=OntologyAdapter.TERM_REPLACED_BY):
+            old_key, new_key = self._term_key(subject), self._term_key(obj)
+            if old_key and new_key and old_key != new_key:
+                replaced[old_key] = new_key
+        index = {}
+        for old_key, new_key in replaced.items():
+            hops = 0
+            while new_key in replaced and hops < self.MAX_REPLACED_BY_HOPS:
+                new_key = replaced[new_key]
+                hops += 1
+            index.setdefault(new_key, []).append(old_key)
+        self._replaced_by = index
+        return index
+
+    def _build_term_aliases(self, node, node_key):
+        # Imported terms (e.g. UBERON terms in CL) belong to their own ontology's adapter.
+        if not self.is_term_of_type(node, 'primary'):
+            return []
+        aliases = AliasCollector(source=self.source)
+        aliases.extend(self.get_all_property_values_from_node(node, 'term_names'), 'preferred_name')
+        aliases.extend(self.get_all_property_values_from_node(node, 'exact_synonyms'), 'exact_synonym')
+        aliases.extend(self.get_all_property_values_from_node(node, 'related_synonyms'), 'related_synonym')
+        aliases.extend(self.get_all_property_values_from_node(node, 'broad_synonyms'), 'broad_synonym')
+        aliases.extend(self.get_all_property_values_from_node(node, 'narrow_synonyms'), 'narrow_synonym')
+        aliases.extend(self.get_alternative_ids(node), 'alternative_id')
+        aliases.extend(sorted(self._replaced_by_index().get(node_key, ())), 'replaced_id')
+        return aliases.to_list()
 
     def get_edges(self):
         self.update_graph()
