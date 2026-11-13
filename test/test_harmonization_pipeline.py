@@ -232,3 +232,55 @@ def test_failed_node_write_leaves_no_shard(schema, tmp_path, monkeypatch):
         _run(schema, tmp_path, _config())
     shard_dir = tmp_path / "harmonization/shards"
     assert not list(shard_dir.glob("*.db")) and not list(shard_dir.glob("*.tmp"))
+
+
+def test_no_aliases_skips_alias_validation(schema, tmp_path):
+    schema_path, schema_dict = schema
+    config = _config()
+    config["fake_edges"]["aliases"] = {"alias_types": ["not_a_type"]}   # invalid, and on an edge-only entry
+    assert ck._setup_harmonization(config, config, schema_path, schema_dict, tmp_path, False, True) is None
+
+
+def _fail_wave2(schema, out, marker, aliases=True, harmonize_edges=True):
+    """Run until fake_edges fails in wave 2; fake_gene's edge unit has completed by then."""
+    marker.touch()
+    with pytest.raises(RuntimeError, match="fake edge adapter failure"):
+        _run(schema, out, _config(fail_marker=str(marker), aliases=aliases),
+             checkpoint=_checkpoint(out), harmonize_edges=harmonize_edges)
+    marker.unlink()
+    ckpt = _checkpoint(out)
+    assert ckpt.load()
+    return ckpt
+
+
+@pytest.mark.parametrize("first, second", [(True, False), (False, True)])
+def test_resume_rejects_changed_harmonize_edges(schema, tmp_path, first, second):
+    out, marker = tmp_path / "out", tmp_path / "fail"
+    ckpt = _fail_wave2(schema, out, marker, harmonize_edges=first)
+    assert json.loads((out / "kg_checkpoint.json").read_text())["extra"]["harmonization"]["harmonize_edges"] is first
+    with pytest.raises(HarmonizationError, match="--harmonize-edges"):
+        _run(schema, out, _config(fail_marker=str(marker)), checkpoint=ckpt, harmonize_edges=second)
+
+
+@pytest.mark.parametrize("first, second", [(True, None), (None, True)])
+def test_resume_rejects_toggled_harmonization(schema, tmp_path, first, second):
+    out, marker = tmp_path / "out", tmp_path / "fail"
+    ckpt = _fail_wave2(schema, out, marker, aliases=first)
+    with pytest.raises(HarmonizationError, match="--restart"):
+        _run(schema, out, _config(fail_marker=str(marker), aliases=second), checkpoint=ckpt)
+
+
+def test_fully_checkpointed_parallel_resume_still_checks_shards(schema, tmp_path):
+    # Every unit completed but the run died before finalizing (checkpoint kept).
+    out = tmp_path / "out"
+    _run(schema, out, _config(), checkpoint=_checkpoint(out))
+    ckpt = _checkpoint(out)
+    assert ckpt.load()
+
+    changed = _config(aliases={"alias_types": ["xref"]})
+    with pytest.raises(HarmonizationError, match="--restart"):
+        _run(schema, out, changed, max_workers=2, checkpoint=ckpt)
+
+    ckpt = _checkpoint(out)
+    assert ckpt.load()
+    _run(schema, out, _config(), max_workers=2, checkpoint=ckpt)      # unchanged config resumes cleanly

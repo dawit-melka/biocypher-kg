@@ -99,7 +99,11 @@ class GencodeGeneAdapter(Adapter):
             deps['hgnc'] = version_stamp(Path(cls.HGNC_CACHE_DIR) / 'hgnc_version.json')
         cache_dir = Adapter.SPECIES_INFO.get(taxon_id, {}).get('entrez_ensembl_cache_directory')
         if cache_dir and not args.get('gene_alias_file_path'):
-            deps['entrez_ensembl'] = version_stamp(Path(cache_dir) / 'entrez_ensembl_version.json')
+            version_file = Path(cache_dir) / 'entrez_ensembl_version.json'
+            deps['entrez_ensembl'] = version_stamp(version_file)
+            # Set when typed records are added to an existing cache without refetching it
+            # (scripts/build_dmel_entrez_ensembl_cache.py --add-gene-info-only).
+            deps['entrez_gene_info'] = version_stamp(version_file, 'gene_info_timestamp')
         return deps
 
     def gene_info_records(self):
@@ -127,9 +131,10 @@ class GencodeGeneAdapter(Adapter):
         aliases = AliasCollector(source=self.source)
         current = result['current'] if result['status'] not in ('unknown', 'ensembl_only') else None
         human = self.taxon_id == 9606
+        # A GTF name that resolved to a different approved symbol is not asserted as a
+        # previous symbol here: process_identifier() also reports alias-symbol and
+        # case-insensitive matches as 'updated'. The HGNC record below types them.
         aliases.add(current, 'approved_symbol', source='HGNC' if human else self.source)
-        if result['status'] == 'updated':
-            aliases.add(result['original'], 'previous_symbol')
 
         hgnc_id = info.get('hgnc_id')
         aliases.add(hgnc_id, 'xref', 'HGNC')

@@ -38,6 +38,7 @@ from biocypher_metta.harmonization.pipeline import (
     adapter_name_of,
     adapters_with_pending_units,
     plan_waves,
+    remove_alias_outputs,
     validate_alias_entries,
 )
 from biocypher_metta.harmonization.schema_info import SchemaInfo
@@ -437,6 +438,8 @@ def _run_adapter_io(writer, adapter, unit_name, unit_entry, include_taxon_id, ha
 
     shard = None
     if unit_entry["nodes"]:
+        # Rebuilding the nodes replaces the adapter's aliases from any earlier run.
+        remove_alias_outputs(writer.output_path, outdir, adapter_name)
         if harmonization is not None:
             shard = harmonization.open_shard(adapter_name, adapter)
         try:
@@ -812,6 +815,10 @@ def _process_adapters_parallel(
 
     if not any(pending_by_wave):
         logger.info("All adapters already completed (from checkpoint).")
+        if harmonization is not None and len(waves) > 1:
+            # Same checks as a resume with work left: shards and registry must
+            # still match the current config before the outputs are finalized.
+            harmonization.barrier(list(waves[1]), completed_adapters)
         return (
             nodes_count, nodes_props, edges_count, datasets_dict,
             adapter_times, empty_output_adapters, total_start,
@@ -1065,8 +1072,18 @@ def process_adapters(
             f"{sum(nodes_count.values())} nodes, "
             f"{sum(edges_count.values())} edges."
         )
+        # Harmonization changes work-unit names and what each unit writes, so a
+        # checkpoint only resumes under the same on/off state.
+        extra = checkpoint_manager.restore_extra()
+        checkpointed = extra.get("harmonization") is not None
+        if checkpointed != (harmonization is not None):
+            raise HarmonizationError(
+                f"The checkpoint was written with entity harmonization (aliases) {'on' if checkpointed else 'off'}, "
+                f"but this run has it {'off' if checkpointed else 'on'}. Resume with the same alias configuration "
+                "and --aliases setting, or re-run with --restart."
+            )
         if harmonization is not None:
-            harmonization.restore(checkpoint_manager.restore_extra())
+            harmonization.restore(extra)
     else:
         nodes_count = Counter()
         nodes_props = defaultdict(set)
@@ -1289,15 +1306,19 @@ def _setup_harmonization(
     ``all_adapters_dict`` is the unfiltered config: entries left out by
     --include-adapters still contribute their alias shards from earlier runs.
     """
+    if not aliases:
+        # Checked before validation: --no-aliases must keep the plain build available
+        # even when an 'aliases:' setting is invalid.
+        configured = [name for name, entry in all_adapters_dict.items() if entry.get("aliases")]
+        if configured:
+            logger.info(f"--no-aliases: ignoring 'aliases' on {len(configured)} adapter(s).")
+        return None
     try:
         all_alias = validate_alias_entries(all_adapters_dict)
     except HarmonizationError as e:
         logger.error(str(e))
         raise typer.Exit(1)
     if not all_alias:
-        return None
-    if not aliases:
-        logger.info(f"--no-aliases: ignoring 'aliases' on {len(all_alias)} adapter(s).")
         return None
 
     selections = {name: sel for name, sel in all_alias.items() if name in adapters_dict}

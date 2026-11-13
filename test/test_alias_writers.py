@@ -93,3 +93,36 @@ def test_alias_of_targets_cover_harmonizable_types(schema):
     info = SchemaInfo.from_schema_file(schema_path, schema_dict)
     targets = set(schema_dict["alias_of"]["target"])
     assert set(info.ontology_term_labels()) | {"gene", "transcript", "protein"} <= targets
+
+
+def _build(schema, out, config, writer_type="metta"):
+    schema_path, schema_dict = schema
+    harmonization = ck._setup_harmonization(config, config, schema_path, schema_dict, out, True, True)
+    writer = ck.get_writer(writer_type, out, schema_path)
+    ck.process_adapters(config, {}, {}, writer, True, True, schema_dict, skip_preflight=True,
+                        harmonization=harmonization)
+
+
+@pytest.mark.parametrize("writer_type", ["metta", "neo4j"])
+def test_rebuild_removes_stale_alias_files(schema, tmp_path, writer_type):
+    aliases = tmp_path / "fake/multi/aliases/fake_multi"
+    shard = tmp_path / "harmonization/shards/fake_multi.db"
+    go_edges = "edges_alias_alias_of_biological_process" + (".metta" if writer_type == "metta" else ".csv")
+    protein_edges = "edges_alias_alias_of_protein" + (".metta" if writer_type == "metta" else ".csv")
+
+    _build(schema, tmp_path, _config(), writer_type)
+    assert (aliases / go_edges).exists() and (aliases / protein_edges).exists()
+
+    # Narrower selection: the GO term no longer has aliases, its alias_of file must go.
+    narrowed = _config()
+    narrowed["fake_multi"]["aliases"] = {"alias_types": ["secondary_accession"]}
+    _build(schema, tmp_path, narrowed, writer_type)
+    assert (aliases / protein_edges).exists()
+    assert not (aliases / go_edges).exists()
+
+    # Aliases switched off for the adapter: its alias output and shard go entirely.
+    plain = _config()
+    del plain["fake_multi"]["aliases"]
+    _build(schema, tmp_path, plain, writer_type)
+    assert not aliases.exists() and not shard.exists()
+    assert (tmp_path / "fake/gene/aliases/fake_gene").exists()       # other adapters untouched

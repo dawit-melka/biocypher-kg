@@ -137,3 +137,37 @@ def test_ontology_fingerprint_tracks_cached_ontology_hash(tmp_path):
     assert OntologyAdapter.alias_fingerprint_deps(args) == {"ontology_cache": "aaa"}
     meta.write_text(_json.dumps({"hash": "bbb", "version": "1"}))
     assert OntologyAdapter.alias_fingerprint_deps(args) == {"ontology_cache": "bbb"}
+
+
+def test_adding_gene_info_records_invalidates_gene_shards(tmp_path, monkeypatch):
+    import gzip
+    import importlib.util
+    import json as _json
+    import pickle
+
+    from biocypher_metta.adapters import Adapter
+    from biocypher_metta.adapters.gencode_gene_adapter import GencodeGeneAdapter
+
+    spec = importlib.util.spec_from_file_location("build_dmel_cache", "scripts/build_dmel_entrez_ensembl_cache.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+
+    cache_dir = tmp_path / "entrez_ensembl"
+    cache_dir.mkdir()
+    with gzip.open(cache_dir / "entrez_ensembl_mapping.pkl", "wb") as f:
+        pickle.dump({"entrez_to_ensembl": {"1": "FBgn0000001"}, "gene_aliases": {}}, f)
+    (cache_dir / "entrez_ensembl_version.json").write_text(_json.dumps({"timestamp": "2026-07-17T00:00:00"}))
+    gene_info = tmp_path / "gene_info.gz"
+    with gzip.open(gene_info, "wt") as f:
+        f.write("#header\n7227\t1\tabc\t-\t-\tFLYBASE:FBgn0000001\t2L\t-\t-\tprotein-coding\tabc\tabc gene\tO\t-\t20240101\t-\n")
+
+    monkeypatch.setitem(Adapter.SPECIES_INFO, 7227,
+                        {**Adapter.SPECIES_INFO[7227], "entrez_ensembl_cache_directory": str(cache_dir)})
+    args = {"taxon_id": 7227, "filepath": "x.gtf.gz"}
+    before = GencodeGeneAdapter.alias_fingerprint_deps(args)
+
+    script.add_gene_info_to_cache(gene_info, cache_dir)
+
+    after = GencodeGeneAdapter.alias_fingerprint_deps(args)
+    assert after != before
+    assert after["entrez_ensembl"] == before["entrez_ensembl"] == "2026-07-17T00:00:00"   # refresh schedule unchanged

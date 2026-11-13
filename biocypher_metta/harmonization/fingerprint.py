@@ -84,10 +84,10 @@ def diff(old: dict, new: dict) -> List[str]:
     return sorted(key for key in set(old) | set(new) if old.get(key) != new.get(key))
 
 
-def version_stamp(version_json_path) -> Optional[str]:
-    """``timestamp`` of a BaseMappingProcessor ``*_version.json``, or None."""
+def version_stamp(version_json_path, key: str = "timestamp") -> Optional[str]:
+    """A stamp (default ``timestamp``) from a BaseMappingProcessor ``*_version.json``, or None."""
     try:
         with open(version_json_path) as f:
-            return json.load(f).get("timestamp")
+            return json.load(f).get(key)
     except (OSError, ValueError):
         return None

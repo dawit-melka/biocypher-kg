@@ -16,6 +16,7 @@ passes through the edge harmonizer.
 
 import csv
 import importlib
+import shutil
 from collections import Counter
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -101,6 +102,28 @@ def adapters_with_pending_units(adapters_dict: dict, completed_units) -> dict:
     return pending
 
 
+def alias_output_prefix(outdir: str, adapter_name: str) -> str:
+    """Writer path_prefix of one adapter's alias nodes and alias_of edges."""
+    return f"{outdir}/aliases/{adapter_name}"
+
+
+def remove_alias_outputs(output_root, outdir: str, adapter_name: str):
+    """Delete an adapter's alias output directory and alias shard from earlier runs.
+
+    Called whenever the adapter's nodes are rebuilt, aliases enabled or not.
+    Writers only create files for rows they receive, so without this an
+    alias selection that shrinks (or aliases being switched off) would leave
+    the previous run's alias files in the graph.
+    """
+    output_root = Path(output_root)
+    alias_dir = output_root / alias_output_prefix(outdir, adapter_name)
+    if alias_dir.is_dir():
+        shutil.rmtree(alias_dir)
+    for stale in shard_paths(output_root / HARMONIZATION_DIRNAME / "shards", adapter_name):
+        if stale.exists():
+            stale.unlink()
+
+
 def _fingerprint_deps(entry: dict) -> dict:
     adapter = entry.get("adapter") or {}
     try:
@@ -122,7 +145,8 @@ class HarmonizationContext:
     main process (they are dropped when pickled).
     """
 
-    _RUN_STATE = ("alias_results", "edge_results", "registry_stats", "executed_alias_adapters")
+    _RUN_STATE = ("alias_results", "edge_results", "registry_stats", "executed_alias_adapters",
+                  "previous_harmonize_edges")
 
     def __init__(self, output_dir, schema_info: SchemaInfo, selections: Dict[str, AliasSelection],
                  all_alias_entries: Dict[str, dict], harmonize_edges: bool = True):
@@ -139,6 +163,9 @@ class HarmonizationContext:
         self.edge_results: Dict[str, dict] = {}
         self.registry_stats: Optional[dict] = None
         self.executed_alias_adapters = set()
+        # --harmonize-edges setting of the checkpointed run being resumed (None: fresh
+        # run, or a checkpoint that did not record it).
+        self.previous_harmonize_edges: Optional[bool] = None
 
     def __getstate__(self):
         return {k: v for k, v in self.__dict__.items() if k not in self._RUN_STATE}
@@ -159,24 +186,39 @@ class HarmonizationContext:
             self.edge_results[edges["adapter"]] = edges
 
     def checkpoint_state(self) -> dict:
-        return {"aliases": self.alias_results, "edges": self.edge_results, "registry": self.registry_stats}
+        return {
+            "aliases": self.alias_results,
+            "edges": self.edge_results,
+            "registry": self.registry_stats,
+            "harmonize_edges": self.harmonize_edges,
+        }
 
     def restore(self, extra: Optional[dict]):
+        """Restore run state from a checkpoint written with harmonization on."""
         state = (extra or {}).get("harmonization") or {}
+        self.previous_harmonize_edges = state.get("harmonize_edges")
         self.alias_results = dict(state.get("aliases") or {})
         self.edge_results = dict(state.get("edges") or {})
         self.registry_stats = state.get("registry")
 
     def barrier(self, wave2_units, completed_units):
         """Between waves: verify shards and build the registry wave 2 resolves against."""
+        completed = set(completed_units)
+        edges_done = any(unit in completed for unit in wave2_units)
+        previous_mode = self.previous_harmonize_edges
+        if edges_done and previous_mode is not None and previous_mode != self.harmonize_edges:
+            raise HarmonizationError(
+                "Edge adapters completed in the checkpointed run were written with edge harmonization "
+                f"{'on' if previous_mode else 'off'}, but this run has it {'on' if self.harmonize_edges else 'off'}. "
+                "Resume with the same --harmonize-edges setting and alias configuration, or re-run with --restart."
+            )
         if not self.harmonize_edges:
             logger.info("Edge harmonization disabled (--no-harmonize-edges); not building the alias registry.")
             return
         resumed = set(self.selections) - self.executed_alias_adapters
         previous = (self.registry_stats or {}).get("fingerprint")
         stats = self.build_registry(self.executed_alias_adapters, resumed)
-        completed = set(completed_units)
-        if previous and previous != stats["fingerprint"] and any(unit in completed for unit in wave2_units):
+        if previous and previous != stats["fingerprint"] and edges_done:
             raise HarmonizationError(
                 "The alias registry differs from the one used by edge adapters completed in the "
                 "checkpointed run, so their edges were resolved differently. Re-run with --restart."
@@ -236,7 +278,7 @@ class HarmonizationContext:
         Counts come from the shard, not from the writer: writers disagree on
         whether their returned counters are per call or cumulative.
         """
-        prefix = f"{entry['outdir']}/aliases/{adapter_name}"
+        prefix = alias_output_prefix(entry["outdir"], adapter_name)
         add_provenance = getattr(adapter, "add_provenance", False)
         source = getattr(adapter, "source", None) if add_provenance else None
         source_url = getattr(adapter, "source_url", None) if add_provenance else None

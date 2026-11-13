@@ -46,7 +46,7 @@ CLI switches (`create_knowledge_graph.py`):
 
 | Flag | Effect |
 |---|---|
-| `--aliases` / `--no-aliases` | Honor or ignore every `aliases:` key (default: honor) |
+| `--aliases` / `--no-aliases` | Honor or ignore every `aliases:` key (default: honor). `--no-aliases` skips alias validation entirely, so it also builds a config whose `aliases:` settings are invalid |
 | `--harmonize-edges` / `--no-harmonize-edges` | Rewrite edge endpoints through the alias registry (default: on). With `--no-harmonize-edges`, alias nodes are still written but no registry is built |
 
 The hsa and dmel sample configs enable aliases on GENCODE genes and transcripts, Swiss-Prot, GO and most ontology node entries. ChEBI and EFO are left off: they are the largest alias sources and are best enabled deliberately.
@@ -55,6 +55,7 @@ The hsa and dmel sample configs enable aliases on GENCODE genes and transcripts,
 
 - The canonical node is written as before, **minus its flat alias properties**: `synonym` (genes, ontology terms), `alternative_ids` (ontology terms), `accessions` (proteins). Those columns disappear from the output of that adapter.
 - `alias` nodes and `alias_of` edges are written to `<outdir>/aliases/<adapter name>/` with the same writer.
+- Whenever an adapter's nodes are rebuilt, that directory and the adapter's shard are deleted first (aliases enabled or not), so a narrower `aliases:` selection or switching aliases off never leaves the previous run's alias files behind.
 
 Adapters that support aliases:
 
@@ -63,7 +64,7 @@ Adapters that support aliases:
 | `GencodeGeneAdapter` | gene | `approved_symbol`, `previous_symbol`, `alias_symbol` (HGNC, NCBI), `full_name`, `other_designation`, `xref` (HGNC, NCBIGene, HAVANA OTTHUMG, MGI) |
 | `GencodeTranscriptAdapter` | transcript | `preferred_name` (transcript name), `xref` (HAVANA OTTHUMT) |
 | `UniprotProteinAdapter` | protein | `secondary_accession`, `entry_name`, `approved_symbol`/`alias_symbol` (gene names), `other_designation` (ORF names), `recommended_name`, `alternative_name`, `short_name`, `xref` (Ensembl ENSP, RefSeq NP; isoform-qualified xrefs go to the isoform node) |
-| `OntologyAdapter` and subclasses (GO, UBERON, CL, CLO, BTO, DO, HPO, HsapDv, SO, FB* …) | the adapter's ontology-term type | `preferred_name`, `exact_synonym`, `related_synonym`, `alternative_id`, `replaced_id` (obsolete terms via `IAO:0100001`, following chains); `broad_synonym`/`narrow_synonym` only when listed in `alias_types` |
+| `OntologyAdapter` and subclasses (GO, UBERON, CL, CLO, BTO, DO, HPO, HsapDv, SO, FB* …) | the adapter's ontology-term type | `preferred_name`, `exact_synonym`, `related_synonym`, `alternative_id`, `replaced_id` (obsolete terms via `IAO:0100001`, following chains; an obsolete term with several replacements is attached to each of them, so it is ambiguous and never used to rewrite edges); `broad_synonym`/`narrow_synonym` only when listed in `alias_types` |
 
 All of these come from data the adapter already parses; nothing is downloaded or parsed a second time. Ontology adapters only alias terms of their own ontology (CL does not alias the UBERON terms it imports).
 
@@ -162,13 +163,17 @@ In the default (no-CURIE) output, writers strip most prefixes, so many `normaliz
 
 ### Shards, partial runs and resume
 
-Each shard stores a fingerprint of what built it: adapter module/class, resolved constructor args, size and mtime of every input file named in them, the entry's `aliases:` selection, a digest of the schema entries it emitted, the version stamps of the HGNC / Entrez caches it read (gene adapter), and the content hash of the cached ontology file (ontology adapters). Before merging:
+Each shard stores a fingerprint of what built it: adapter module/class, resolved constructor args, size and mtime of every input file named in them, the entry's `aliases:` selection, a digest of the schema entries it emitted, the version stamps of the HGNC / Entrez caches it read, including the stamp `scripts/build_dmel_entrez_ensembl_cache.py --add-gene-info-only` sets (gene adapter), and the content hash of the cached ontology file (ontology adapters). Before merging:
 
 - Adapters run in this build: their shard must exist (it was just written).
 - Adapters completed in an earlier, checkpointed run and resumed now: the shard must match the current config, else the run stops and asks for `--restart`.
 - Adapters left out by `--include-adapters`: an existing shard is reused if it still matches; a stale one stops the run (include that adapter or pass `--no-harmonize-edges`); a missing one only warns and `registry_complete: false` is reported.
 
-On resume, if the rebuilt registry differs from the one recorded when some wave-2 units completed, the run stops and asks for `--restart`.
+On resume (including a resume where every unit had already completed and only finalization failed), the run stops and asks for `--restart` when:
+
+- harmonization was on in the checkpointed run and is off now, or the other way round (it changes the work units and what they write);
+- `--harmonize-edges` differs from the checkpointed run and some wave-2 units already completed;
+- the rebuilt registry differs from the one recorded when some wave-2 units completed.
 
 ---
 

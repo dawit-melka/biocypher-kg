@@ -659,7 +659,12 @@ class OntologyAdapter(Adapter):
         return text.replace('_', ':', 1) if ':' not in text else text
 
     def _replaced_by_index(self):
-        """{replacement term key: [obsolete term keys]}, following replaced_by chains."""
+        """{replacement term key: [obsolete term keys]}, following replaced_by chains.
+
+        An obsolete term may name several replacements; it is listed under every
+        final replacement, so the alias registry sees it as ambiguous and never
+        rewrites edges with it.
+        """
         index = getattr(self, '_replaced_by', None)
         if index is not None:
             return index
@@ -667,16 +672,32 @@ class OntologyAdapter(Adapter):
         for subject, obj in self.graph.subject_objects(predicate=OntologyAdapter.TERM_REPLACED_BY):
             old_key, new_key = self._term_key(subject), self._term_key(obj)
             if old_key and new_key and old_key != new_key:
-                replaced[old_key] = new_key
+                replaced.setdefault(old_key, set()).add(new_key)
         index = {}
-        for old_key, new_key in replaced.items():
-            hops = 0
-            while new_key in replaced and hops < self.MAX_REPLACED_BY_HOPS:
-                new_key = replaced[new_key]
-                hops += 1
-            index.setdefault(new_key, []).append(old_key)
+        for old_key in replaced:
+            for target in self._final_replacements(old_key, replaced):
+                index.setdefault(target, []).append(old_key)
         self._replaced_by = index
         return index
+
+    def _final_replacements(self, old_key, replaced):
+        """Terms a chain of replaced_by links ends at (cycle-safe, at most MAX_REPLACED_BY_HOPS)."""
+        finals, seen = set(), {old_key}
+        frontier = set(replaced[old_key])
+        for _ in range(self.MAX_REPLACED_BY_HOPS):
+            next_frontier = set()
+            for key in frontier - seen:
+                seen.add(key)
+                if key in replaced:
+                    next_frontier |= replaced[key]
+                else:
+                    finals.add(key)
+            frontier = next_frontier - seen
+            if not frontier:
+                break
+        # Chains longer than the hop limit end where the walk stopped.
+        finals |= frontier
+        return finals - {old_key}
 
     def _build_term_aliases(self, node, node_key):
         # Imported terms (e.g. UBERON terms in CL) belong to their own ontology's adapter.

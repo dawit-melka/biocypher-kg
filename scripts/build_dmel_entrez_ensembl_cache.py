@@ -142,7 +142,13 @@ def build_mapping(gene_info_path, gtf_path):
 
 
 def add_gene_info_to_cache(gene_info_path, cache_dir):
-    """Add typed records to an existing cache, keeping its timestamp."""
+    """Add typed records to an existing cache.
+
+    The cache's ``timestamp`` is kept: the Entrez-FBgn mapping itself was not
+    refetched, so its refresh schedule must not move. ``gene_info_timestamp``
+    records the change instead; GencodeGeneAdapter's alias shard fingerprint
+    includes it, so shards built from the previous records are invalidated.
+    """
     cache_dir = Path(cache_dir)
     mapping_file = cache_dir / "entrez_ensembl_mapping.pkl"
     version_file = cache_dir / "entrez_ensembl_version.json"
@@ -153,6 +159,7 @@ def add_gene_info_to_cache(gene_info_path, cache_dir):
         pickle.dump(mapping, f, protocol=pickle.HIGHEST_PROTOCOL)
     version_info = json.loads(version_file.read_text())
     version_info["entries"] = sum(len(v) for v in mapping.values())
+    version_info["gene_info_timestamp"] = datetime.now().isoformat()
     version_file.write_text(json.dumps(version_info, indent=2))
     logger.info("Added typed gene_info records to %s", mapping_file)
 

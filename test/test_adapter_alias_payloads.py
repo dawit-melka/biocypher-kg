@@ -267,3 +267,76 @@ def test_alias_classes_declare_support():
         assert cls.SUPPORTS_ALIASES
     assert set(OntologyAdapter.ALIAS_LEGACY_PROPS) == {"synonym", "alternative_ids"}
     assert GeneOntologyAdapter.ALIAS_LEGACY_PROPS == OntologyAdapter.ALIAS_LEGACY_PROPS
+
+
+_SPLIT_TTL = """
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+obo:UBERON_0000948 a owl:Class ; rdfs:label "heart" .
+obo:UBERON_0000949 a owl:Class ; rdfs:label "endocrine system" .
+obo:UBERON_0000010 a owl:Class ; rdfs:label "obsolete split term" ; owl:deprecated true ;
+    obo:IAO_0100001 obo:UBERON_0000948, obo:UBERON_0000949 .
+obo:UBERON_0000011 a owl:Class ; rdfs:label "obsolete cycle a" ; owl:deprecated true ;
+    obo:IAO_0100001 obo:UBERON_0000012 .
+obo:UBERON_0000012 a owl:Class ; rdfs:label "obsolete cycle b" ; owl:deprecated true ;
+    obo:IAO_0100001 obo:UBERON_0000011 .
+"""
+
+
+def test_obsolete_term_with_several_replacements_is_ambiguous(tmp_path):
+    import yaml
+    from biocypher_metta.harmonization.pipeline import HarmonizationContext
+    from biocypher_metta.harmonization.registry import RegistryReader, build_registry
+    from biocypher_metta.harmonization.resolver import EdgeEndpointHarmonizer
+    from biocypher_metta.harmonization.schema_info import SchemaInfo
+    from biocypher_metta.harmonization.shard import AliasShard
+
+    _seed("test_split", _SPLIT_TTL)
+    try:
+        adapter = UberonAdapter(True, False, "test_split", "node", "anatomy")
+        adapter.enable_aliases()
+        schema_path = tmp_path / "schema.yaml"
+        schema_path.write_text(yaml.safe_dump({
+            "ontology term": {"represented_as": "node", "input_label": "ontology term"},
+            "anatomy": {"represented_as": "node", "input_label": "anatomy", "is_a": "ontology term"},
+        }))
+        edge_types = {"part_of_anatomy": {"source": "anatomy", "target": "anatomy", "output_label": None}}
+        schema_info = SchemaInfo.from_schema_file(schema_path, edge_types)
+        shard = AliasShard(tmp_path / "shards", "uberon", AliasSelection(), schema_info)
+        raw_nodes = list(adapter.get_nodes())
+        nodes = _by_id(raw_nodes)
+        list(HarmonizationContext.wrap_nodes(iter(raw_nodes), shard, adapter))
+        build_registry({"uberon": shard.finalize({"format": 1})}, tmp_path / "registry.db")
+    finally:
+        OntologyAdapter._ONTOLOGY_LOAD_CACHE.pop(("test_split", None), None)
+
+    # Both replacements carry the obsolete ID; the cycle yields no replacement at all.
+    for node_id in ("UBERON:0000948", "UBERON:0000949"):
+        _, props = nodes[node_id]
+        assert ("UBERON:0000010", "replaced_id", None) in _refs(props)
+    replaced_ids = {old for olds in adapter._replaced_by_index().values() for old in olds}
+    assert replaced_ids == {"UBERON:0000010"}
+
+    harmonizer = EdgeEndpointHarmonizer(RegistryReader(tmp_path / "registry.db"), schema_info, "edges")
+    edge = ("UBERON:0000010", "UBERON:0000948", "part_of_anatomy", {})
+    assert list(harmonizer.wrap([edge])) == [edge]
+    assert harmonizer.summary()["statuses"] == {"ambiguous": 1, "unchanged": 1}
+
+
+class _AliasMatchHGNC(_StubHGNC):
+    """The GTF names the gene by an alias symbol, which process_identifier reports as 'updated'."""
+
+    def process_identifier(self, identifier):
+        return {"status": "updated", "original": identifier, "current": "A1BG"}
+
+
+def test_gene_name_resolved_through_alias_is_not_a_previous_symbol(tmp_path, monkeypatch):
+    adapter = _gene_adapter(tmp_path, monkeypatch)
+    adapter.hgnc_processor = _AliasMatchHGNC()
+    adapter.enable_aliases()
+    [(_, _, props)] = list(adapter.get_nodes())
+    refs = {(r.value, r.alias_type) for r in props[ALIAS_PAYLOAD_KEY]}
+    assert ("A1B", "alias_symbol") in refs           # typed by the HGNC record
+    assert not any(alias_type == "previous_symbol" for _, alias_type in refs)
