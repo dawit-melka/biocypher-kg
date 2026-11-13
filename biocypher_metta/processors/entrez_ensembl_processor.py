@@ -22,6 +22,37 @@ from biocypher._logger import logger
 from .base_mapping_processor import BaseMappingProcessor
 
 
+# dbXref prefixes that name the species' primary gene ID in NCBI gene_info.
+_GENE_ID_XREF_PREFIXES = ('Ensembl:', 'FLYBASE:', 'WormBase:')
+
+
+def _multi(value: str) -> List[str]:
+    return [v for v in (value or '').split('|') if v and v != '-']
+
+
+def gene_info_record(fields: List[str]) -> Optional[Dict[str, Any]]:
+    """Typed record for one NCBI gene_info row, or None if it names no gene ID.
+
+    Keeps each nomenclature field separate (unlike ``gene_aliases``, which
+    flattens them into one list) so aliases can be typed downstream.
+    """
+    dbxrefs = _multi(fields[5])
+    hgnc_id = next((ref[len('HGNC:'):] for ref in dbxrefs if ref.startswith('HGNC:')), None)
+    gene_ids = [ref.split(':', 1)[1] for ref in dbxrefs if ref.startswith(_GENE_ID_XREF_PREFIXES)]
+    if not gene_ids and not hgnc_id:
+        return None
+    return {
+        'entrez_id': fields[1],
+        'symbol': fields[2] if fields[2] != '-' else None,
+        'nomenclature_symbol': fields[10] if fields[10] != '-' else None,
+        'synonyms': _multi(fields[4]),
+        'full_name': fields[11] if fields[11] != '-' else None,
+        'other_designations': _multi(fields[13]),
+        'hgnc_id': hgnc_id,             # 'HGNC:<n>' (dbXref reads 'HGNC:HGNC:<n>')
+        'gene_ids': gene_ids,
+    }
+
+
 class EntrezEnsemblProcessor(BaseMappingProcessor):
 
     def __init__(
@@ -134,6 +165,7 @@ class EntrezEnsemblProcessor(BaseMappingProcessor):
             logger.info(f"{self.name}: Parsing NCBI Gene Info (streaming)...")
             entrez_to_symbol = {}
             gene_aliases = {}
+            gene_info = {}
 
             with gzip.open(gene_info_path, 'rt', encoding='utf-8') as f:
                 for line_num, line in enumerate(f, 1):
@@ -161,6 +193,11 @@ class EntrezEnsemblProcessor(BaseMappingProcessor):
 
                     if symbol_from_nomenclature and symbol_from_nomenclature != '-':
                         entrez_to_symbol[entrez_id] = symbol_from_nomenclature
+
+                    record = gene_info_record(fields)
+                    if record:
+                        for key in record['gene_ids'] + ([record['hgnc_id']] if record['hgnc_id'] else []):
+                            gene_info[key] = record
 
                     # Build gene aliases (same logic as gencode_gene_adapter.get_gene_alias)
                     split_dbxrefs = dbxrefs.split('|')
@@ -238,9 +275,15 @@ class EntrezEnsemblProcessor(BaseMappingProcessor):
 
             logger.info(f"{self.name}: Created {len(entrez_to_ensembl)} Entrez-Ensembl mappings")
 
+            if not entrez_to_ensembl:
+                # e.g. an upstream host answering with an empty body (FlyBase WAF);
+                # raising keeps the cached mapping instead of overwriting it.
+                raise ValueError(f"{self.name}: built an empty Entrez-Ensembl mapping; refusing to save it")
+
             return {
                 'entrez_to_ensembl': entrez_to_ensembl,
-                'gene_aliases': gene_aliases
+                'gene_aliases': gene_aliases,
+                'gene_info': gene_info,
             }
 
         finally:
@@ -281,6 +324,22 @@ class EntrezEnsemblProcessor(BaseMappingProcessor):
         logger.info(f"{self.name}: Detected legacy flat mapping format, re-fetching...")
         self.update_mapping(force=True)
         return self.mapping.get('gene_aliases', {})
+
+    @property
+    def gene_info_records(self) -> Dict[str, Dict[str, Any]]:
+        """Typed NCBI gene_info records keyed by gene ID (Ensembl/FBgn/WBGene) and 'HGNC:<n>'.
+
+        Caches written before typed records existed are refreshed once on first use.
+        """
+        if not self.mapping:
+            self.load_or_update()
+        if 'gene_info' not in self.mapping:
+            logger.info(f"{self.name}: Cached mapping has no typed gene_info records; refreshing.")
+            self.update_mapping(force=True)
+        if 'gene_info' not in self.mapping:
+            logger.warning(f"{self.name}: Typed gene_info records unavailable; gene aliases will be limited.")
+            return {}
+        return self.mapping['gene_info']
 
     def get_gene_aliases(self, identifier: str) -> Optional[List[str]]:
         """Look up aliases by Ensembl ID or HGNC ID."""

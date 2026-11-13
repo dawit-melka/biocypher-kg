@@ -9,6 +9,10 @@ This catalogue lists every data source integrated into the BioCypher-KG pipeline
 
 ---
 
+Gene, transcript, protein and ontology adapters can also emit typed aliases (`aliases:` in the adapters config); see [entity-harmonization.md](entity-harmonization.md#what-changes-for-an-alias-enabled-adapter) for which adapters support it and what each contributes.
+
+---
+
 ## How to add a new data source
 
 See [CONTRIBUTING.md](https://github.com/rejuve-bio/biocypher-kg/blob/main/CONTRIBUTING.md) for the full adapter development guide. In brief:

@@ -83,60 +83,38 @@ class GeneOntologyAdapter(OntologyAdapter):
             self._ensure_mapping_loaded()
         return self.subontology_mapping.get(go_id)
 
-    def get_nodes(self):
-        self.update_graph()
-        self.cache_node_properties()
+    def _iter_candidate_terms(self):
+        """Only terms of this adapter's subontology (GO terms share one graph)."""
         self._ensure_mapping_loaded()
+        if self.graph is None or not self.current_subontology:
+            return
 
-        if self.graph is not None and self.current_subontology:
-            self.subontology_counter = 0
-            processed_nodes = set()
+        self.subontology_counter = 0
+        processed_nodes = set()
 
-            for node in self.graph.all_nodes():
-                if not isinstance(node, rdflib.term.URIRef):
-                    continue
+        for node in self.graph.all_nodes():
+            if not isinstance(node, rdflib.term.URIRef):
+                continue
 
-                if self.is_a_restriction_block(node):
-                    continue
+            if self.is_a_restriction_block(node):
+                continue
 
-                node_key = self._process_node_key(node)
-                if node_key is None or node_key in processed_nodes:
-                    continue
+            node_key = self._process_node_key(node)
+            if node_key is None or node_key in processed_nodes:
+                continue
 
-                if self.is_deprecated(node):
-                    continue
+            if self.is_deprecated(node):
+                continue
 
-                if self.subontology_mapping.get(node_key) != self.current_subontology:
-                    continue
+            if self.subontology_mapping.get(node_key) != self.current_subontology:
+                continue
 
-                if self.dry_run and self.subontology_counter >= 100:
-                    break
+            if self.dry_run and self.subontology_counter >= 100:
+                break
 
-                term_name = ', '.join(self.get_all_property_values_from_node(node, 'term_names'))
-                synonyms = (self.get_all_property_values_from_node(node, 'related_synonyms') +
-                    self.get_all_property_values_from_node(node, 'exact_synonyms'))
-                alternative_ids = self.get_alternative_ids(node)
-
-                props = {}
-                if self.write_properties:
-                    props['term_name'] = term_name
-                    if synonyms:
-                        props['synonym'] = synonyms
-                    if alternative_ids:
-                        props['alternative_ids'] = alternative_ids
-
-                    if self.add_description:
-                        description = ' '.join(self.get_all_property_values_from_node(node, 'descriptions'))
-                        if description:
-                            props['description'] = description
-
-                    if self.add_provenance:
-                        props['source'] = self.source
-                        props['source_url'] = self.source_url
-
-                processed_nodes.add(node_key)
-                self.subontology_counter += 1
-                yield node_key, self.label, props
+            processed_nodes.add(node_key)
+            self.subontology_counter += 1
+            yield node, node_key
 
     def get_edges(self):
         self.update_graph()

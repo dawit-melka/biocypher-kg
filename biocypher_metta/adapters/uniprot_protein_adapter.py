@@ -5,6 +5,7 @@ import re
 import json
 import os
 from biocypher_metta.adapters import Adapter
+from biocypher_metta.harmonization.aliases import ALIAS_PAYLOAD_KEY, AliasCollector
 from biocypher_metta.processors import GOSubontologyProcessor
 from Bio import SwissProt
 
@@ -15,6 +16,20 @@ from Bio import SwissProt
 
 class UniprotProteinAdapter(Adapter):
     ALLOWED_SOURCES = ['UniProtKB/Swiss-Prot', 'UniProtKB/TrEMBL']
+
+    SUPPORTS_ALIASES = True
+    ALIAS_LEGACY_PROPS = ('accessions',)
+
+    # Protein-level cross-references usable as identifier aliases: DR database ->
+    # (alias namespace, index of the protein ID within the DR tuple).
+    PROTEIN_XREFS = {
+        'Ensembl': ('ENSEMBL', 2),
+        'EnsemblMetazoa': ('ENSEMBL', 2),
+        'RefSeq': ('RefSeq', 1),
+    }
+    _ISOFORM_QUALIFIER = re.compile(r'\[([A-Z0-9]+-\d+)\]')
+    _DISPLAYED_ISOFORM = re.compile(r'IsoId=([A-Z0-9-]+)(?:,\s*[A-Z0-9-]+)*;\s*Sequence=Displayed')
+    _EVIDENCE = re.compile(r'\s*\{[^}]*\}')
     
   
     TRANSLATION_CONDITION_MAP = {
@@ -135,6 +150,61 @@ class UniprotProteinAdapter(Adapter):
             return prot_pfx in syn
         return False
 
+    def protein_name_aliases(self, description, aliases):
+        """RecName/AltName Full= and Short= names of the entry (not of its chains)."""
+        section = None
+        for part in self._EVIDENCE.sub('', description or '').split(';'):
+            part = part.strip()
+            if part.startswith(('Contains:', 'Includes:')):
+                break
+            for marker, name in (('RecName:', 'RecName'), ('AltName:', 'AltName'), ('SubName:', 'RecName')):
+                if part.startswith(marker):
+                    section = name
+                    part = part[len(marker):].strip()
+            if '=' not in part:
+                continue
+            key, value = part.split('=', 1)
+            if key == 'Full':
+                aliases.add(value, 'recommended_name' if section == 'RecName' else 'alternative_name')
+            elif key == 'Short':
+                aliases.add(value, 'short_name')
+
+    def record_alias_payloads(self, record):
+        """{node accession: alias list} for an entry's canonical and isoform nodes."""
+        base_id = record.accessions[0].upper()
+        base = AliasCollector(source=self.source)
+        base.extend(record.accessions[1:], 'secondary_accession', 'UniProtKB')
+        base.add(record.entry_name, 'entry_name', 'UniProtKB')
+        for gene in record.gene_name or []:
+            base.add(gene.get('Name'), 'approved_symbol')
+            base.extend(gene.get('Synonyms'), 'alias_symbol')
+            base.extend(gene.get('ORFNames'), 'other_designation')
+            base.extend(gene.get('OrderedLocusNames'), 'other_designation')
+        self.protein_name_aliases(record.description, base)
+
+        displayed = None
+        for comment in record.comments:
+            match = self._DISPLAYED_ISOFORM.search(comment)
+            if match:
+                displayed = match.group(1).upper()
+                break
+
+        payloads = {base_id: base}
+        for xref in record.cross_references:
+            spec = self.PROTEIN_XREFS.get(xref[0])
+            if not spec or len(xref) <= spec[1]:
+                continue
+            namespace, index = spec
+            protein_id = xref[index].split('. ')[0].strip().rstrip('.')
+            if not protein_id or protein_id == '-':
+                continue
+            qualifier = self._ISOFORM_QUALIFIER.search(xref[-1])
+            target = base_id
+            if qualifier and qualifier.group(1).upper() != displayed:
+                target = qualifier.group(1).upper()
+            payloads.setdefault(target, AliasCollector(source=self.source)).add(protein_id, 'xref', namespace)
+        return {node_id: collector.to_list() for node_id, collector in payloads.items()}
+
     def get_nodes(self):
         taxon_to_suffixes = defaultdict(lambda: None)
         taxon_to_suffixes[6239] = 'CAEEL'
@@ -153,6 +223,7 @@ class UniprotProteinAdapter(Adapter):
                 
                 base_id = record.accessions[0].upper()
                 props = {}
+                alias_payloads = self.record_alias_payloads(record) if self.emit_aliases else {}
 
                 if self.write_properties:
                     props = {
@@ -164,6 +235,8 @@ class UniprotProteinAdapter(Adapter):
                     if self.add_provenance:
                         props['source'] = self.source
                         props['source_url'] = self.source_url
+                if self.emit_aliases:
+                    props[ALIAS_PAYLOAD_KEY] = alias_payloads.get(base_id, [])
 
                 yield base_id, self.label, props
                 
@@ -183,6 +256,8 @@ class UniprotProteinAdapter(Adapter):
                                 if self.add_provenance:
                                     props['source'] = self.source
                                     props['source_url'] = self.source_url
+                            if self.emit_aliases and isoform_id in alias_payloads:
+                                props[ALIAS_PAYLOAD_KEY] = alias_payloads[isoform_id]
 
                             yield isoform_id, self.label, props
                         break

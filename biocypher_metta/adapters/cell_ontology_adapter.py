@@ -41,45 +41,42 @@ class CellOntologyAdapter(OntologyAdapter):
         
         return super().should_include_edge(from_node, to_node, predicate, edge_type)
 
-    def get_nodes(self):
-        self.update_graph()
-        self.cache_node_properties()
-
+    def _iter_candidate_terms(self):
         node_count = 0
         for node in self.graph.subjects(RDF.type, OWL.Class):
             if not self.should_include_node(node):
                 continue
-            
+
             if self.is_deprecated(node):
-                # print(f"Skipping deprecated node: {self.to_key(node)}")
                 continue
 
-            term_id = self.to_key(node)
-            term_name = ', '.join(self.get_all_property_values_from_node(node, 'term_names'))
-            synonyms = self.get_all_property_values_from_node(node, 'related_synonyms') + self.get_all_property_values_from_node(node, 'exact_synonyms')
-            alternative_ids = self.get_alternative_ids(node)
-
-            props = {}
-            if self.write_properties:
-                props['term_name'] = term_name
-                if synonyms:
-                    props['synonym'] = synonyms
-                if alternative_ids:
-                    props['alternative_ids'] = alternative_ids
-
-                if self.add_description:
-                    description = ' '.join(self.get_all_property_values_from_node(node, 'descriptions'))
-                    props['description'] = description.replace('"', '')
-
-                if self.add_provenance:
-                    props['source'] = self.source
-                    props['source_url'] = self.source_url
-            
-            yield term_id, self.label, props
+            yield node, self.to_key(node)
 
             node_count += 1
             if self.dry_run and node_count > 100:
                 break
+
+    def _build_term_props(self, node):
+        term_name = ', '.join(self.get_all_property_values_from_node(node, 'term_names'))
+        synonyms = self.get_all_property_values_from_node(node, 'related_synonyms') + self.get_all_property_values_from_node(node, 'exact_synonyms')
+        alternative_ids = self.get_alternative_ids(node)
+
+        props = {}
+        if self.write_properties:
+            props['term_name'] = term_name
+            if synonyms:
+                props['synonym'] = synonyms
+            if alternative_ids:
+                props['alternative_ids'] = alternative_ids
+
+            if self.add_description:
+                description = ' '.join(self.get_all_property_values_from_node(node, 'descriptions'))
+                props['description'] = description.replace('"', '')
+
+            if self.add_provenance:
+                props['source'] = self.source
+                props['source_url'] = self.source_url
+        return props
 
     def get_edges(self):
         if self.type != 'edge':

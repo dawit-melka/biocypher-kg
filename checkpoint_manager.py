@@ -79,8 +79,13 @@ class CheckpointManager:
         "nodes_props":  {...},    # lists (serialised sets)
         "edges_count":  {...},
         "datasets_dict": {...},
-        "elapsed_seconds": 0.0    # accumulated wall-clock time across all runs
+        "elapsed_seconds": 0.0,   # accumulated wall-clock time across all runs
+        "extra": {...}            # optional subsystem state (e.g. harmonization stats)
     }
+
+    "completed_adapters" holds work-unit names: the adapter name, or
+    "<adapter>::nodes" / "<adapter>::edges" when entity harmonization splits an
+    adapter's node and edge phases across waves.
     """
 
     def __init__(self, output_dir: Path, pipeline_id: str):
@@ -132,8 +137,13 @@ class CheckpointManager:
         datasets_dict: dict,
         failed_adapters: Optional[list] = None,
         elapsed_seconds: float = 0.0,
+        extra: Optional[dict] = None,
     ):
-        """Atomically write the checkpoint file."""
+        """Atomically write the checkpoint file.
+
+        ``extra`` replaces the stored extra state when given; when omitted the
+        previously stored value is kept.
+        """
         now = datetime.utcnow().isoformat()
         state = {
             "pipeline_id": self.pipeline_id,
@@ -146,6 +156,7 @@ class CheckpointManager:
             "edges_count": _serialize(edges_count),
             "datasets_dict": _serialize(datasets_dict),
             "elapsed_seconds": elapsed_seconds,
+            "extra": extra if extra is not None else (self._state or {}).get("extra", {}),
         }
         # Write atomically via a temp file
         tmp = self.checkpoint_path.with_suffix(".tmp")
@@ -180,6 +191,12 @@ class CheckpointManager:
             _deserialize_edges_count(self._state.get("edges_count", {})),
             _deserialize_datasets_dict(self._state.get("datasets_dict", {})),
         )
+
+    def restore_extra(self) -> dict:
+        """Return the stored extra state ({} for checkpoints written without it)."""
+        if self._state is None:
+            return {}
+        return self._state.get("extra", {}) or {}
 
     def restore_elapsed(self) -> float:
         """Return accumulated elapsed seconds from previous run(s)."""

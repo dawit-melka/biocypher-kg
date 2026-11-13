@@ -57,6 +57,7 @@ Welcome to the BioCypher-KG documentation. This index maps every document to its
 | [adapter-catalog.md](knowledge-graph/adapter-catalog.md) | All 40+ data sources: biology, species, node/edge types, URLs |
 | [ontology.md](knowledge-graph/ontology.md) | 16 integrated ontologies, CURIE prefixes, fetch behavior |
 | [ingestion-pipeline.md](knowledge-graph/ingestion-pipeline.md) | Download → adapt → write flow, provenance chain |
+| [entity-harmonization.md](knowledge-graph/entity-harmonization.md) | Alias nodes, `alias_of` edges, edge-endpoint resolution, registry and reports |
 | [graph-construction.md](knowledge-graph/graph-construction.md) | BioCypher integration, schema merging, ID conventions |
 | [writers.md](knowledge-graph/writers.md) | All 7 output formats — Neo4j CSV, MeTTa, Prolog, Parquet, KGX, NetworkX |
 

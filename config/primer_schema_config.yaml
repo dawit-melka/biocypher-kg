@@ -21,6 +21,37 @@ Title: BioCypher graph schema configuration file (Biolink-adapted for all specie
       type: str
       biolink: source_web_page
 
+alias:
+  represented_as: node
+  is_a: information content entity
+  mixins:
+  - biolink:InformationContentEntity
+  biolink_category: biolink:InformationContentEntity
+  input_label: alias
+  description: An alternate name or cross-reference identifier of a canonical gene,
+    transcript, protein or ontology term; linked to the entity by alias_of edges.
+    Written only for adapters-config entries that set 'aliases'.
+  properties:
+    name:
+      type: str
+      biolink: name
+      description: The alternate name, or the local part of an identifier alias
+    normalized_name:
+      type: str
+      description: Case-folded name for case-insensitive lookup
+    alias_kind:
+      type: str
+      description: identifier | name
+    namespace:
+      type: str
+      description: Identifier namespace (HGNC, NCBIGene, UniProtKB, GO, ...); absent for names
+    entity_type:
+      type: str
+      description: gene | transcript | protein | ontology_term
+    scope:
+      type: str
+      description: Taxon ID for genes/transcripts/proteins, ontology prefix for ontology terms
+
 anatomy:
   is_a: ontology term
   represented_as: node
@@ -712,6 +743,53 @@ in gene to variant association:
       type: float
       biolink: has_quantitative_value
 
+
+alias of:
+  is_a: annotation
+  mixins:
+  - biolink:Association
+  biolink_predicate: biolink:related_to
+  represented_as: edge
+  input_label: alias_of
+  output_label: alias_of
+  inherit_properties: true
+  description: Links an alias to the canonical entity it names. An alias with
+    several alias_of edges is ambiguous.
+  source: alias
+  target:
+  - gene
+  - transcript
+  - protein
+  - anatomy
+  - biological process
+  - cell line
+  - cell type
+  - cellular component
+  - developmental stage
+  - disease
+  - experimental factor
+  - molecular function
+  - molecular interaction
+  - pathway
+  - phenotype
+  - reaction
+  - sequence type
+  - small molecule
+  - tissue
+  kgx_properties:
+    subject_category: biolink:InformationContentEntity
+    object_category: biolink:NamedThing
+    knowledge_level: knowledge_assertion
+    agent_type: automated_agent
+  properties:
+    alias_type:
+      type: str[]
+      description: How the alias relates to the entity (approved_symbol, previous_symbol,
+        exact_synonym, secondary_accession, xref, ...)
+    alias_source:
+      type: str[]
+      biolink: knowledge_source
+      description: Sources that assert the alias
 
 annotation:
   is_a: related to at concept level

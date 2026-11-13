@@ -129,6 +129,11 @@ class ParquetWriter(BaseWriter):
 
     
 
+    def _narrow_types(self, schema_types, typed):
+        wanted = self.normalize_label(typed)
+        matches = [t for t in schema_types if self.normalize_label(t) == wanted]
+        return matches or [typed]
+
     def preprocess_id(self, prev_id):
         """
         Normalize IDs for Parquet output.
@@ -328,6 +333,14 @@ class ParquetWriter(BaseWriter):
                         typed_src = source_id_raw[0] if has_typed_source else (source_types[0] if isinstance(source_types, list) else source_types)
                         typed_tgt = target_id_raw[0] if has_typed_target else (target_types[0] if isinstance(target_types, list) else target_types)
                         self.validate_edge_types(label, typed_src, typed_tgt)
+
+                    # A schema endpoint listing several types (e.g. alias_of targets)
+                    # would otherwise write the edge once per listed type; a typed
+                    # tuple says which one this edge actually has.
+                    if has_typed_source and len(source_types) > 1:
+                        source_types = self._narrow_types(source_types, source_id_raw[0])
+                    if has_typed_target and len(target_types) > 1:
+                        target_types = self._narrow_types(target_types, target_id_raw[0])
 
                     # Filter props per user exclusion before writing
                     filtered_props = {k: v for k, v in properties.items() if k not in self.excluded_properties}
